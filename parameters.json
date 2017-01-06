@@ -1,0 +1,40 @@
+[{
+  "ParameterKey": "ECRRepository",
+  "ParameterValue": "nginx-docker"
+},
+{
+  "ParameterKey": "ECSClusterName",
+  "ParameterValue": "ci-cd-final"
+},
+{
+  "ParameterKey": "ECSRegion",
+  "ParameterValue": "ap-southeast-1"
+},
+{
+  "ParameterKey": "GitHubBranch",
+  "ParameterValue": "master"
+},
+{
+  "ParameterKey": "GitHubRepo",
+  "ParameterValue": "nginx-docker"
+},
+{
+  "ParameterKey": "GitHubToken",
+  "ParameterValue": "66bd89f3172dcbbeec29df9557472a5a3e1eb432"
+},
+{
+  "ParameterKey": "S3BucketKey",
+  "ParameterValue": "Archive.zip"
+},
+{
+  "ParameterKey": "S3BucketName",
+  "ParameterValue": "cftemplates-us-east"
+},
+{
+  "ParameterKey": "GitHubUser",
+  "ParameterValue": "microservices-today"
+},
+{
+  "ParameterKey": "TagName",
+  "ParameterValue": "ci-cd-final"
+}]
