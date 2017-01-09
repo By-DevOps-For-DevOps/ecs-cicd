@@ -122,6 +122,7 @@ Resources:
                   - codebuild:BatchGetBuilds
                   - cloudformation:*
                   - iam:PassRole
+                  - lambda:*
 
   LambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -183,6 +184,8 @@ Resources:
             Value: !Ref ECRRepository
           - Name: GITHUB_TOKEN
             Value: !Ref GitHubToken
+          - Name: ECS_CLUSTER_NAME
+            Value: !Ref ECSClusterName
       Name: !Ref TagName
       ServiceRole: !Ref CodeBuildServiceRole
 
