@@ -1,0 +1,41 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  Tag:
+    Type: String
+    Description: Tag of the Docker Image.
+    Default: 0bfe78175d877322c44bdb5203c2c5aae9726fa4
+  ECSClusterName:
+    Type: String
+    Description: Name of an existing ECS Cluster.
+    Default: production-prototype
+
+Resources:
+  Repository:
+    Type: AWS::ECR::Repository
+    DeletionPolicy: Retain
+  Nginxtaskdefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: Nginx-ng
+      ContainerDefinitions:
+      - Name: nginx
+        Cpu: '10'
+        Essential: 'true'
+        Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/nginx-docker:0bfe78175d877322c44bdb5203c2c5aae9726fa4
+        Memory: '128'
+        PortMappings:
+        - ContainerPort: 80
+          HostPort: 80
+      Volumes:
+      - Name: my-vol
+  NginxService:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: production-prototype
+      DesiredCount: '1'
+      TaskDefinition: !Ref 'Nginxtaskdefinition'
+Outputs:
+  ecsservice:
+    Value: !Ref 'NginxService'
+  ECRRepository:
+    Value: !Ref Repository
