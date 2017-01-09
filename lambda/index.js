@@ -72,17 +72,17 @@ exports.handler = (event, context, callback) => {
                     else {
                       var serviceDefinition = YAML.load('/tmp/artifacts/ecs/service.yaml');
                       console.log(JSON.stringify(serviceDefinition));
-                      //https://s3.amazonaws.com/cftemplates-us-east/Archive.zip
                       console.log(JSON.stringify(serviceDefinition.Resources));
                       AWS.config.update({region: 'ap-southeast-1'});
                       var cloudformation = new AWS.CloudFormation();
+                      var stackName = serviceDefinition.Parameters.ECSClusterName.Default + '-' + serviceDefinition.Resources.Nginxtaskdefinition.Properties.Family;
                       var params = {
-                        StackName: 'sampleawssdks3', /* required */
+                        StackName: stackName.replace(/['"]+/g, ''), /* required */
                         TemplateBody: JSON.stringify(serviceDefinition),
                       }
                       cloudformation.createStack(params, function (err, data) {
-                        if (err) console.log(err, err.stack); // an error occurred
-                        else     console.log(data);           // successful response
+                        if (err)  putJobFailure(err);// an error occurred
+                        else     putJobSuccess(data);           // successful response
                       });
                     }
                 });

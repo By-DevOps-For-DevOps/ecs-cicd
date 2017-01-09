@@ -159,6 +159,8 @@ Resources:
                   - iam:ListInstanceProfiles
                   - iam:ListRoles
                   - iam:PassRole
+                  - codepipeline:*
+                  - logs:*
 
   ArtifactBucket:
     Type: AWS::S3::Bucket
@@ -186,7 +188,6 @@ Resources:
             Value: !Ref GitHubToken
           - Name: ECS_CLUSTER_NAME
             Value: !Ref ECSClusterName
-      Name: !Ref TagName
       ServiceRole: !Ref CodeBuildServiceRole
 
   LambdaFunction:
@@ -195,7 +196,6 @@ Resources:
       Code:
         S3Bucket: !Ref S3BucketName
         S3Key: !Ref S3BucketKey
-      FunctionName: !Ref TagName
       Handler: index.handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs4.3

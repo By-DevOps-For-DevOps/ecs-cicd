@@ -7,3 +7,6 @@
 4. Customize the `parameter.json` file according to requirements.
 5. Export the AWS access and secret key with default region in the console.
 6. Run ```create-stack --stack-name myteststack --template-body file://///Users/user/Dropbox/microservices-today/Iac-ngp-cicd-aws/pipeline.yaml --parameters file:////Users/user/Dropbox/microservices-today/Iac-ngp-cicd-aws/parameters.json --capabilities CAPABILITY_NAMED_IAM```
+
+# Architecture
+![Preview](CICDPipeline.png)
