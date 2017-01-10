@@ -1,0 +1,3 @@
+Resources:
+  S3B4OUHU:
+    Type: AWS::S3::Bucket
