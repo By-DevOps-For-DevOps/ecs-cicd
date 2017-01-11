@@ -1,6 +1,6 @@
 [{
   "ParameterKey": "ECRRepository",
-  "ParameterValue": "nginx-docker"
+  "ParameterValue": "complete ECR URI"
 },
 {
   "ParameterKey": "ECSClusterName",
@@ -24,7 +24,7 @@
 },
 {
   "ParameterKey": "S3BucketKey",
-  "ParameterValue": "Archive.zip"
+  "ParameterValue": "lambdafunction.zip"
 },
 {
   "ParameterKey": "S3BucketName",
