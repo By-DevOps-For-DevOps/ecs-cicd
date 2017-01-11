@@ -82,7 +82,13 @@ exports.handler = (event, context, callback) => {
                       }
                       cloudformation.createStack(params, function (err, data) {
                         if (err)  putJobFailure(err);// an error occurred
-                        else     putJobSuccess(data);           // successful response
+                        else  {
+                            cloudformation.updateStack(params, function(err, data) {
+                               if (err) putJobFailure(err);// an error occurred
+                               else     putJobSuccess(data);          // successful response
+                              
+                             });
+                        }
                       });
                     }
                 });
