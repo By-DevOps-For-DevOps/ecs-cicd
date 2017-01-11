@@ -75,7 +75,7 @@ exports.handler = (event, context, callback) => {
                       console.log(JSON.stringify(serviceDefinition.Resources));
                       AWS.config.update({region: 'ap-southeast-1'});
                       var cloudformation = new AWS.CloudFormation();
-                      var stackName = serviceDefinition.Parameters.ECSClusterName.Default + '-' + serviceDefinition.Resources.Nginxtaskdefinition.Properties.Family;
+                      var stackName = serviceDefinition.Parameters.ECSClusterName.Default + '-' + serviceDefinition.Resources.Taskdefinition.Properties.Family;
                       var params = {
                         StackName: stackName.replace(/['"]+/g, ''), /* required */
                         TemplateBody: JSON.stringify(serviceDefinition),
