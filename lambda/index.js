@@ -81,14 +81,13 @@ exports.handler = (event, context, callback) => {
                         TemplateBody: JSON.stringify(serviceDefinition),
                       }
                       cloudformation.createStack(params, function (err, data) {
-                        if (err)  putJobFailure(err);// an error occurred
-                        else  {
+                        if (err)  {
                             cloudformation.updateStack(params, function(err, data) {
                                if (err) putJobFailure(err);// an error occurred
                                else     putJobSuccess(data);          // successful response
                               
                              });
-                        }
+                        } else putJobSuccess(data);
                       });
                     }
                 });
