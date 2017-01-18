@@ -32,6 +32,7 @@ exports.handler = (event, context, callback) => {
         var params = {
             jobId: jobId
         };
+        AWS.config.update({region: 'us-east-1'});
         codepipeline.putJobSuccessResult(params, function(err, data) {
             if(err) {
                 console.log("Unable to update pipeline" + err);
@@ -53,6 +54,7 @@ exports.handler = (event, context, callback) => {
                 externalExecutionId: context.invokeid
             }
         };
+        AWS.config.update({region: 'us-east-1'});
         codepipeline.putJobFailureResult(params, function(err, data) {
             context.fail(message);
         });
