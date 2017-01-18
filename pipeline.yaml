@@ -1,6 +1,7 @@
 Parameters:
   GitHubRepo:
     Type: String
+    Description: Git hub repo name (e.g. github.com/xxx/yyy then yy)
   GitHubBranch:
     Type: String
     Default: 'master'
