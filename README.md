@@ -1,4 +1,4 @@
-# IAC for Creating CI/CD pipeline with AWS developer tools using CloudFormation.
+# IaC for Creating CodePipeline
 
 ### Prerequisites
 1. Create an s3bucket in US region to store the lamda function.
