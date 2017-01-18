@@ -1,1 +1,7 @@
 lambda/node_modules/
+
+# Mac
+.DS_Store
+
+# Emacs
+*~
