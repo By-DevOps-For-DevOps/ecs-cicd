@@ -231,11 +231,11 @@ Resources:
             Value: !Ref GitHubToken
           - Name: ECS_CLUSTER_NAME
             Value: !Ref ECSClusterName
-          - NAME: PUBLIC_SUBNET_AZ1
+          - Name: PUBLIC_SUBNET_AZ1
             Value: !Ref PublicSubnetAZ1
-          - NAME: PUBLIC_SUBNET_AZ2
+          - Name: PUBLIC_SUBNET_AZ2
             Value: !Ref PublicSubnetAZ2
-          - NAME: VPC_ID
+          - Name: VPC_ID
             Value: !Ref VpcId
       ServiceRole: !Ref CodeBuildServiceRole
 
