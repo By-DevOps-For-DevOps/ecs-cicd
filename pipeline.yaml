@@ -30,7 +30,22 @@ Parameters:
     Type: String
     Description: Eg lambdafunction.zip
     Default: Lamdafunction.zip
-
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+        default: "Github configuration"
+        Parameters:
+          - GitHubRepo
+          - GitHubBranch
+          - GitHubToken
+          - GitHubUser
+      -
+        Label:
+          default: "S3 Bucker for Lambda Function"
+        Parameters:
+          - S3BucketName
+          - S3BucketKey
 Resources:
   CloudFormationExecutionRole:
     Type: AWS::IAM::Role
