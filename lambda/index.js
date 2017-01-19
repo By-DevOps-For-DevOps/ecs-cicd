@@ -81,6 +81,7 @@ exports.handler = (event, context, callback) => {
                       var params = {
                         StackName: stackName.replace(/['"]+/g, ''), /* required */
                         TemplateBody: JSON.stringify(serviceDefinition),
+                        Capabilities: ['CAPABILITY_IAM | CAPABILITY_NAMED_IAM']
                       }
                       cloudformation.createStack(params, function (err, data) {
                         if (err)  {
