@@ -157,9 +157,7 @@ Resources:
                   - ec2:Describe*
                   - elasticloadbalancing:*
                   - ecs:*
-                  - iam:ListInstanceProfiles
-                  - iam:ListRoles
-                  - iam:PassRole
+                  - iam:*
                   - codepipeline:*
                   - logs:*
 
