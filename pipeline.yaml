@@ -1,3 +1,29 @@
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: "Github configuration"
+        Parameters:
+          - GitHubRepo
+          - GitHubBranch
+          - GitHubToken
+          - GitHubUser
+      - Label:
+          default: "S3 Bucker for Lambda Function"
+        Parameters:
+          - S3BucketName
+          - S3BucketKey
+      - Label:
+          default: "EC2 Container Service"
+        Parameters:
+          - ECSClusterName
+          - ECRRepository
+          - ECSRegion
+          - PublicSubnetAZ1
+          - PublicSubnetAZ2
+          - VpcId
+
+
 Parameters:
   GitHubRepo:
     Type: String
@@ -29,23 +55,17 @@ Parameters:
   S3BucketKey:
     Type: String
     Description: Eg lambdafunction.zip
-    Default: Lamdafunction.zip
-Metadata:
-  AWS::CloudFormation::Interface:
-    ParameterGroups:
-      - Label:
-        default: "Github configuration"
-        Parameters:
-          - GitHubRepo
-          - GitHubBranch
-          - GitHubToken
-          - GitHubUser
-      -
-        Label:
-          default: "S3 Bucker for Lambda Function"
-        Parameters:
-          - S3BucketName
-          - S3BucketKey
+    Default: lambdafunction.zip
+  PublicSubnetAZ1:
+    Description: Public Subnet ID in Availability Zone 1 of ECS Cluster.
+    Type: String
+  PublicSubnetAZ2:
+    Description: Public Subnet ID in Availability Zone 2 of ECS Cluster.
+    Type: String
+  VpcId:
+    Type: String
+    Description: Provide the VPC ID of ECS Cluster.
+
 Resources:
   CloudFormationExecutionRole:
     Type: AWS::IAM::Role
@@ -211,6 +231,12 @@ Resources:
             Value: !Ref GitHubToken
           - Name: ECS_CLUSTER_NAME
             Value: !Ref ECSClusterName
+          - NAME: PUBLIC_SUBNET_AZ1
+            Value: !Ref PublicSubnetAZ1
+          - NAME: PUBLIC_SUBNET_AZ2
+            Value: !Ref PublicSubnetAZ2
+          - NAME: VPC_ID
+            Value: !Ref VpcId
       ServiceRole: !Ref CodeBuildServiceRole
 
   LambdaFunction:
