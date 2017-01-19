@@ -1,26 +1,35 @@
 Parameters:
   GitHubRepo:
     Type: String
-    Description: Git hub repo name (e.g. github.com/xxx/yyy then yy)
+    Description: Github repo name (e.g. github.com/Org/RepoName then RepoName)
   GitHubBranch:
     Type: String
     Default: 'master'
+    Description: The github branch to monitor for changes.
   GitHubToken:
     Type: String
-  TagName:
-    Type: String
+    Description: The Github Token which has access to the repository.
   GitHubUser:
     Type: String
+    Description: The Github User/Organisation under which the repository is hosted.
+  TagName:
+    Type: String
+    Description: Tag name for the cloudformation stack
   ECRRepository:
     Type: String
+    Description: Complete ECR repository URI
   ECSClusterName:
     Type: String
   ECSRegion:
     Type: String
+    Description: Region containing the ECS Cluster.
   S3BucketName:
     Type: String
+    Description: S3 Bucket which contains the Lambda function
   S3BucketKey:
     Type: String
+    Description: Eg lambdafunction.zip
+    Default: Lamdafunction.zip
 
 Resources:
   CloudFormationExecutionRole:
