@@ -17,7 +17,7 @@ if [[ -z "$VERSION" ]]; then
 fi
 echo -e "\nSpecify the bucket name for storing the lamda function, the bucket should be in same region of CodePipeline"
 read S3_BUCKET_NAME
-cd Lambda
+cd lambda
 npm install
 zip -r lambdafunction.zip ./*
 aws s3 cp lambdafunction.zip s3://${S3_BUCKET_NAME}/
