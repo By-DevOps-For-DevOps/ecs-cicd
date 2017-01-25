@@ -9,20 +9,27 @@ Metadata:
           - GitHubToken
           - GitHubUser
       - Label:
-          default: "S3 Bucker for Lambda Function"
+          default: "S3 Bucket for Lambda Function"
         Parameters:
           - S3BucketName
           - S3BucketKey
       - Label:
           default: "EC2 Container Service"
         Parameters:
-          - ECSClusterName
-          - ECRRepository
-          - ECSRegion
+          - VpcId
           - PublicSubnetAZ1
           - PublicSubnetAZ2
-          - VpcId
-
+          - ECSClusterName
+          - ECSRespositoryName
+          - ECSRegion
+          - SourceECSAWSAccountId
+          - SourceECSRegion
+          - SourceTag
+      - Label:
+          default: "Release Details"
+        Parameters:
+          - ReleaseVersion
+          - DeployEnvironment
 
 Parameters:
   GitHubRepo:
@@ -41,14 +48,23 @@ Parameters:
   TagName:
     Type: String
     Description: Tag name for the cloudformation stack
-  ECRRepository:
+  ECSRespositoryName:
     Type: String
-    Description: Complete ECR repository URI
+    Description: ECS Respository Name (If URI is xxx.dkr.ecr.us-east-1.amazonaws.com/nginx, then nginx)
   ECSClusterName:
     Type: String
   ECSRegion:
     Type: String
     Description: Region containing the ECS Cluster.
+  SourceECSAWSAccountId:
+    Type: String
+    Description: (Production Only) AWS Account Id of the Staging ECS Cluster
+  SourceECSRegion:
+    Type: String
+    Description: (Production Only) Region containing the Staging ECS Cluster
+  SourceTag:
+    Type: String
+    Description: (Production Only) Tag of the Staging ECR Image to be deployed
   S3BucketName:
     Type: String
     Description: S3 Bucket which contains the Lambda function
@@ -65,6 +81,38 @@ Parameters:
   VpcId:
     Type: String
     Description: Provide the VPC ID of ECS Cluster.
+  ReleaseVersion:
+    Type: String
+    Description: Application version to be released/ FeatureId incase of feature CodePipeline. This will be appended to the docker image tag.
+  DeployEnvironment:
+    Type: String
+    Description: Specify the environment
+    AllowedValues:
+      - production
+      - staging
+      - hotfix
+      - development
+      - feature
+    ConstraintDescription: Must specify production, staging, hotfix, development or feature.
+
+Mappings:
+  DockerTagPhraseFromEnv:
+    production:
+      value: ""
+    staging:
+      value: "candidate"
+    hotfix:
+      value: "hotfix"
+    development:
+      value: "snapshot"
+    feature:
+      value: "feature"
+Conditions:
+  IsProductionCondition: !Equals [ !Ref DeployEnvironment, production ]
+  IsStagingCondition: !Equals [ !Ref DeployEnvironment, staging ]
+  IsHotfixCondition: !Equals [ !Ref DeployEnvironment, hotfix ]
+  IsDevelopmentCondition: !Equals [ !Ref DeployEnvironment, development ]
+  IsFeatureCondition: !Equals [ !Ref DeployEnvironment, feature ]
 
 Resources:
   CloudFormationExecutionRole:
@@ -97,14 +145,17 @@ Resources:
     Properties:
       RoleName: !Sub cb-${TagName}
       Path: /
-      AssumeRolePolicyDocument: |
-        {
-            "Statement": [{
-                "Effect": "Allow",
-                "Principal": { "Service": [ "codebuild.amazonaws.com" ]},
-                "Action": [ "sts:AssumeRole" ]
-            }]
-        }
+      AssumeRolePolicyDocument:
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "codebuild.amazonaws.com"
+              AWS:
+                - !If [IsProductionCondition, !Sub "arn:aws:iam::${SourceECSAWSAccountId}:root", !Ref "AWS::NoValue"]
+            Action:
+              - "sts:AssumeRole"
       Policies:
         - PolicyName: root
           PolicyDocument:
@@ -123,16 +174,10 @@ Resources:
                   - s3:GetObject
                   - s3:PutObject
                   - s3:GetObjectVersion
-              - Resource: !Sub arn:aws:ecr:${ECSRegion}:${AWS::AccountId}:repository/*
+              - Resource: "*"
                 Effect: Allow
                 Action:
-                  - ecr:GetDownloadUrlForLayer
-                  - ecr:BatchGetImage
-                  - ecr:BatchCheckLayerAvailability
-                  - ecr:PutImage
-                  - ecr:InitiateLayerUpload
-                  - ecr:UploadLayerPart
-                  - ecr:CompleteLayerUpload
+                  - ecr:*
 
   CodePipelineServiceRole:
     Type: AWS::IAM::Role
@@ -223,10 +268,18 @@ Resources:
         Image: "aws/codebuild/docker:1.12.1"
         Type: "LINUX_CONTAINER"
         EnvironmentVariables:
+          - Name: AWS_ACCOUNT_ID
+            Value: !Ref AWS::AccountId
           - Name: AWS_REGION
             Value: !Ref ECSRegion
-          - Name: ECR_REPO
-            Value: !Ref ECRRepository
+          - Name: ECR_NAME
+            Value: !Ref ECSRespositoryName
+          - Name: SOURCE_AWS_ACCOUNT_ID
+            Value: !Ref SourceECSAWSAccountId
+          - Name: SOURCE_AWS_REGION
+            Value: !Ref SourceECSRegion
+          - Name: SOURCE_TAG
+            Value: !Ref SourceTag
           - Name: GITHUB_TOKEN
             Value: !Ref GitHubToken
           - Name: ECS_CLUSTER_NAME
@@ -237,6 +290,12 @@ Resources:
             Value: !Ref PublicSubnetAZ2
           - Name: VPC_ID
             Value: !Ref VpcId
+          - Name: RELEASE_VERSION
+            Value: !Ref ReleaseVersion
+          - Name: DEPLOY_ENVIRONMENT
+            Value: !Ref DeployEnvironment
+          - Name: BUILD_SCOPE
+            Value: !FindInMap [DockerTagPhraseFromEnv, !Ref DeployEnvironment, value]
       ServiceRole: !Ref CodeBuildServiceRole
 
   LambdaFunction:
@@ -275,6 +334,16 @@ Resources:
               RunOrder: 1
         - Name: Build
           Actions:
+            - !If
+              - IsProductionCondition
+              - Name: ManualApproval
+                ActionTypeId:
+                  Category: Approval
+                  Owner: AWS
+                  Version: 1
+                  Provider: Manual
+                RunOrder: 2
+              - !Ref AWS::NoValue
             - Name: Build
               ActionTypeId:
                 Category: Build
@@ -287,7 +356,7 @@ Resources:
                 - Name: App
               OutputArtifacts:
                 - Name: BuildOutput
-              RunOrder: 2
+              RunOrder: 3
         - Name: Deploy
           Actions:
             - Name: Deploy
@@ -300,7 +369,7 @@ Resources:
                 FunctionName: !Ref LambdaFunction
               InputArtifacts:
                 - Name: BuildOutput
-              RunOrder: 3
+              RunOrder: 4
 
 Outputs:
   PipelineUrl:
