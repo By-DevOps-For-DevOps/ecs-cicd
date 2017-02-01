@@ -237,6 +237,8 @@ Resources:
             Value: !Ref PublicSubnetAZ2
           - Name: VPC_ID
             Value: !Ref VpcId
+          - Name: TAG_NAME
+            Value: !Ref TagName
       ServiceRole: !Ref CodeBuildServiceRole
 
   LambdaFunction:

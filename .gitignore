@@ -5,3 +5,6 @@ lambda/node_modules/
 
 # Emacs
 *~
+
+# Lambda zip
+lambda/lambdafunction.zip
