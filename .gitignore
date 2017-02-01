@@ -6,5 +6,6 @@ lambda/node_modules/
 # Emacs
 *~
 
-lambda/lambdafunction.zip
 .idea/
+# Lambda zip
+lambda/lambdafunction.zip
