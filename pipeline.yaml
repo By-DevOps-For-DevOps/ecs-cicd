@@ -296,6 +296,8 @@ Resources:
             Value: !Ref DeployEnvironment
           - Name: BUILD_SCOPE
             Value: !FindInMap [DockerTagPhraseFromEnv, !Ref DeployEnvironment, value]
+          - Name: TAG_NAME
+            Value: !Ref TagName
       ServiceRole: !Ref CodeBuildServiceRole
 
   LambdaFunction:
