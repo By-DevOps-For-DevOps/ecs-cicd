@@ -14,15 +14,17 @@
 ### Architecture
 ![Preview](CICDPipeline.png)
 
+### CodePipeline Stages
 ##### Source Stage
 AWS CodePipeline uses GitHub repository as the source stage for your code.
 
 ##### Build Stage
-For production CodePipeline, CodeBuild pulls docker image from the
-Staging ECR and pushes it to Production ECR.
-For rest of the environments, CodeBuild builds docker image from the 
+For Development and Staging CodePipeline, CodeBuild builds docker image from the 
 source code and pushes it to ECR.
-Also, CodeBuild updates the CloudFormation stack to deploy the ECS
+For production environment, CodeBuild pulls docker image from the
+Staging ECR and pushes it to Production ECR.
+
+Also, CodeBuild updates the CloudFormation template (service.yaml) to deploy the ECS
 Service with environment specific information.
 
 ##### Deploy Stage
