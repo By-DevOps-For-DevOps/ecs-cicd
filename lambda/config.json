@@ -1,0 +1,4 @@
+{
+  "codepipeline_region" : "us-east-1",
+  "ecs_cluster_region" : "us-west-2"
+}
