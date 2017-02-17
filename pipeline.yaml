@@ -16,12 +16,11 @@ Metadata:
       - Label:
           default: "EC2 Container Service"
         Parameters:
-          - VpcId
-          - PublicSubnetAZ1
-          - PublicSubnetAZ2
-          - ECSClusterName
           - ECSRespositoryName
           - ECSRegion
+      - Label:
+          default: "ECS Production Parameters"
+        Parameters:
           - SourceECSAWSAccountId
           - SourceECSRegion
           - SourceTag
@@ -30,6 +29,7 @@ Metadata:
         Parameters:
           - ReleaseVersion
           - DeployEnvironment
+
 
 Parameters:
   GitHubRepo:
@@ -47,12 +47,10 @@ Parameters:
     Description: The Github User/Organisation under which the repository is hosted.
   TagName:
     Type: String
-    Description: Tag name for the cloudformation stack
+    Description: Tag name for the cloudformation stack (should same as infrastructure stack tag name)
   ECSRespositoryName:
     Type: String
     Description: ECS Respository Name (If URI is xxx.dkr.ecr.us-east-1.amazonaws.com/nginx, then nginx)
-  ECSClusterName:
-    Type: String
   ECSRegion:
     Type: String
     Description: Region containing the ECS Cluster.
@@ -66,21 +64,13 @@ Parameters:
     Type: String
     Description: (Production Only) Tag of the Staging ECR Image to be deployed
   S3BucketName:
+    Default: S3_BUCKET_NAME
     Type: String
     Description: S3 Bucket which contains the Lambda function
   S3BucketKey:
     Type: String
     Description: Eg lambdafunction.zip
     Default: lambdafunction.zip
-  PublicSubnetAZ1:
-    Description: Public Subnet ID in Availability Zone 1 of ECS Cluster.
-    Type: String
-  PublicSubnetAZ2:
-    Description: Public Subnet ID in Availability Zone 2 of ECS Cluster.
-    Type: String
-  VpcId:
-    Type: String
-    Description: Provide the VPC ID of ECS Cluster.
   ReleaseVersion:
     Type: String
     Description: Application version to be released/ FeatureId incase of feature CodePipeline. This will be appended to the docker image tag.
@@ -96,17 +86,23 @@ Parameters:
     ConstraintDescription: Must specify production, staging, hotfix, development or feature.
 
 Mappings:
-  DockerTagPhraseFromEnv:
+  EnviormentTag:
     production:
       value: ""
+      env: "Prod"
     staging:
       value: "candidate"
+      env: "Staging"
     hotfix:
       value: "hotfix"
+      env: "Dev"
     development:
       value: "snapshot"
+      env: "Dev"
     feature:
       value: "feature"
+      env: "Dev"
+
 Conditions:
   IsProductionCondition: !Equals [ !Ref DeployEnvironment, production ]
   IsStagingCondition: !Equals [ !Ref DeployEnvironment, staging ]
@@ -282,22 +278,15 @@ Resources:
             Value: !Ref SourceTag
           - Name: GITHUB_TOKEN
             Value: !Ref GitHubToken
-          - Name: ECS_CLUSTER_NAME
-            Value: !Ref ECSClusterName
-          - Name: PUBLIC_SUBNET_AZ1
-            Value: !Ref PublicSubnetAZ1
-          - Name: PUBLIC_SUBNET_AZ2
-            Value: !Ref PublicSubnetAZ2
-          - Name: VPC_ID
-            Value: !Ref VpcId
           - Name: RELEASE_VERSION
             Value: !Ref ReleaseVersion
           - Name: DEPLOY_ENVIRONMENT
             Value: !Ref DeployEnvironment
           - Name: BUILD_SCOPE
-            Value: !FindInMap [DockerTagPhraseFromEnv, !Ref DeployEnvironment, value]
-          - Name: TAG_NAME
-            Value: !Ref TagName
+            Value: !FindInMap [EnviormentTag, !Ref DeployEnvironment, value]
+          - Name: ENVIRONMENT_NAME
+            Value:
+              !Join ["-", [!Ref TagName, !FindInMap [EnviormentTag, !Ref DeployEnvironment, env]]]
       ServiceRole: !Ref CodeBuildServiceRole
 
   LambdaFunction:

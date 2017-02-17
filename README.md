@@ -7,9 +7,10 @@
 4. GitHub Token with `admin:repo_hook` and `repo` scopes.
 
 ### Steps to install.
-1. Run `bash bin/configure.sh`.
-2. Open the link and at the end of the script to continue the installation.
-3. Sample parameters can be seen in `parameter.json`
+1. Update `lambda/config.json` file.
+2. Run `bash bin/configure.sh`.
+3. Open the link and at the end of the script to continue the installation.
+4. Sample parameters can be seen in `parameters.json`
 
 ### Architecture
 ![Preview](CICDPipeline.png)
