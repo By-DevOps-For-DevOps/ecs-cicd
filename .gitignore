@@ -9,3 +9,5 @@ lambda/node_modules/
 .idea/
 # Lambda zip
 lambda/lambdafunction.zip
+
+lambda/config.json
