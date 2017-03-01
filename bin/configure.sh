@@ -4,23 +4,13 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 
-echo -e "\nPlease specify the preferred version of the application (Leave empty for the master version).
-You can find the latest release version here.${GREEN}https://github.com/microservices-today/IaC-ngp-aws/releases.${NC}"
-read VERSION
-if [ "$VERSION" == "DEV" -o "$VERSION" == "dev" ]; then #skip for development
-    echo -- Development mode --
-else
-    git checkout .
-    if [[ -z "$VERSION" ]]; then
-         git checkout master
-       else
-         git checkout tags/$VERSION
-    fi
-fi
-echo -e "\nSpecify the bucket name for storing the lamda function, the bucket should be in same region of CodePipeline"
+echo -e "\nSpecify the ${GREEN}S3 bucket name${NC} for storing the lamda function, the bucket should be in same region of CodePipeline"
 read S3_BUCKET_NAME
-echo -e "Enter the AWS REGION to deploy the Cloudformation Stack"
+echo -e "Enter the ${GREEN}AWS REGION${NC} to deploy the Cloudformation Stack [default: ${BLUE}ap-northeast-1${NC}]"
 read AWS_REGION
+if [[ -z "$AWS_REGION" ]]; then
+    AWS_REGION=ap-northeast-1
+fi
 
 cd lambda
 npm install
