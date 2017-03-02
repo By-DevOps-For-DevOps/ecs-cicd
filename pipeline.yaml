@@ -1,3 +1,9 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: >
+  This template  builds an AWS CodePipeline pipeline that implements a continuous delivery release
+  process for an app.
+
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -32,6 +38,9 @@ Metadata:
 
 
 Parameters:
+  PipelineName:
+    Description: A name for pipeline
+    Type: String
   GitHubRepo:
     Type: String
     Description: Github repo name (e.g. github.com/Org/RepoName then RepoName)
@@ -47,7 +56,10 @@ Parameters:
     Description: The Github User/Organisation under which the repository is hosted.
   TagName:
     Type: String
-    Description: Tag name for the cloudformation stack (should same as infrastructure stack tag name)
+    Description: Tag name for the cloudformation stack
+  InfrastructureTagName:
+    Type: String
+    Description: Tag name specified for infrastructure cloudformation stack.
   ECSRespositoryName:
     Type: String
     Description: ECS Respository Name (If URI is xxx.dkr.ecr.us-east-1.amazonaws.com/nginx, then nginx)
@@ -286,7 +298,7 @@ Resources:
             Value: !FindInMap [EnviormentTag, !Ref DeployEnvironment, value]
           - Name: ENVIRONMENT_NAME
             Value:
-              !Join ["-", [!Ref TagName, !FindInMap [EnviormentTag, !Ref DeployEnvironment, env]]]
+              !Join ["-", [!Ref InfrastructureTagName, !FindInMap [EnviormentTag, !Ref DeployEnvironment, env]]]
       ServiceRole: !Ref CodeBuildServiceRole
 
   LambdaFunction:
@@ -306,6 +318,7 @@ Resources:
       ArtifactStore:
         Type: S3
         Location: !Ref ArtifactBucket
+      Name: !Ref 'PipelineName'
       Stages:
         - Name: Source
           Actions:
