@@ -1,7 +1,7 @@
 # IaC for Creating CodePipeline
 
 ### Prerequisites
-1. Create an s3bucket to store the lamda function.
+1. Create an s3bucket to store the lamda function. The bucket should be in same region as your codepipeline.
 2. Create an ECR repository in the region containing the ECS CLUSTER.
 3. The application repository must contain `ecs/service.yaml` and `buildspec.yaml`.
 4. GitHub Token with `admin:repo_hook` and `repo` scopes.
