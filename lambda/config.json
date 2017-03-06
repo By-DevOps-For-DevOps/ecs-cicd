@@ -1,4 +1,6 @@
 {
   "codepipeline_region" : "us-east-1",
-  "ecs_cluster_region" : "us-east-1"
+  "ecs_cluster_region" : "us-east-1",
+  "slack_web_hook_url": "",
+  "slack_channel": "#your-channel"
 }
