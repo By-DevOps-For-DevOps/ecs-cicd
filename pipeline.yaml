@@ -35,8 +35,11 @@ Metadata:
         Parameters:
           - ReleaseVersion
           - DeployEnvironment
-
-
+      - Label:
+          default: "Slack Notification"
+        Parameters:
+          - SlackChannel
+          - SlackWebHook
 Parameters:
   PipelineName:
     Description: A name for pipeline
@@ -96,6 +99,12 @@ Parameters:
       - development
       - feature
     ConstraintDescription: Must specify production, staging, hotfix, development or feature.
+  SlackChannel:
+    Type: String
+    Description: Slack channel to be notified.
+  SlackWebHook:
+    Type: String
+    Description: Slack incoming webhook
 
 Mappings:
   EnviormentTag:
@@ -257,6 +266,7 @@ Resources:
                   - iam:*
                   - codepipeline:*
                   - logs:*
+                  - sns:*
 
   ArtifactBucket:
     Type: AWS::S3::Bucket
@@ -311,6 +321,15 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs4.3
       Timeout: 300
+      Environment:
+        Variables:
+          NotificationARN: !GetAtt NotificationStack.Outputs.CFNotifyEventSource
+          Channel: !Ref SlackChannel
+          SlackWebHook: !Ref SlackWebHook
+          DeployEnvironment: !Ref DeployEnvironment
+          EnvironmentName: !Join ["-", [!Ref InfrastructureTagName, !FindInMap [EnviormentTag, !Ref DeployEnvironment, env]]]
+          ECSRegion: !Ref ECSRegion
+          PipelineRegion: !Ref AWS::Region
   Pipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
@@ -374,6 +393,16 @@ Resources:
               InputArtifacts:
                 - Name: BuildOutput
               RunOrder: 4
+  NotificationStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        Bucket: !Ref S3BucketName
+        Channel: !Ref SlackChannel
+        SlackWebHook: !Ref SlackWebHook
+        DeployEnvironment: !Ref DeployEnvironment
+        EnvironmentName: !Join ["-", [!Ref InfrastructureTagName, !FindInMap [EnviormentTag, !Ref DeployEnvironment, env]]]
+      TemplateURL: !Sub https://s3.amazonaws.com/${S3BucketName}/notification.yaml
 
 Outputs:
   PipelineUrl:
