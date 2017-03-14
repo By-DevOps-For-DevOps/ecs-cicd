@@ -7,7 +7,6 @@ var https = require('https');
 var util = require('util');
 var codepipeline = new AWS.CodePipeline();
 const exec = require('child_process').exec;
-var config = require("./config.json");
 
 exports.handler = function(event, context, callback) {
 
@@ -31,22 +30,22 @@ exports.handler = function(event, context, callback) {
 
     const unzipCommand = "rm -rf /tmp/artifacts && mkdir -p /tmp/artifacts && unzip /tmp/artifact.zip -d /tmp/artifacts"
 
-    AWS.config.update({region: config.ecs_cluster_region});
+    AWS.config.update({region: process.env.ECSRegion});
     var cloudformation = new AWS.CloudFormation();
 
     // slack configurations
     var postData = {
-        "channel": config.slack_channel,
-        "username": "AWS Codepipeline via Lamda :: DevQa Cloud",
+        "channel": process.env.Channel,
+        "username": process.env.DeployEnvironment.toUpperCase() +" :: " + process.env.EnvironmentName,
         "text": "**",
-        "icon_emoji": ":cubimal_chick:"
+        "icon_emoji": ":cloud:"
     };
 
     var options = {
         method: 'POST',
         hostname: 'hooks.slack.com',
         port: 443,
-        path: config.slack_web_hook_url
+        path: process.env.SlackWebHook
     };
 
 
@@ -82,11 +81,10 @@ exports.handler = function(event, context, callback) {
      */
     var putJobSuccess = function(message) {
         console.log("Success " + JSON.stringify(message));
-        sentSlackNotification("good", "Deployment successful!", "Deployment has been successful.");
         var params = {
             jobId: jobId
         };
-        AWS.config.update({region: config.codepipeline_region});
+        AWS.config.update({region: process.env.PipelineRegion});
         codepipeline.putJobSuccessResult(params, function(err, data) {
             if(err) {
                 console.log("Unable to update pipeline" + err);
@@ -105,7 +103,6 @@ exports.handler = function(event, context, callback) {
      */
     var putJobFailure = function(message) {
         console.log("Failure " + JSON.stringify(message));
-        sentSlackNotification("danger", "Deployment failed!", message.message);
         var params = {
             jobId: jobId,
             failureDetails: {
@@ -114,47 +111,12 @@ exports.handler = function(event, context, callback) {
                 externalExecutionId: context.invokeid
             }
         };
-        AWS.config.update({region: config.codepipeline_region});
+        AWS.config.update({region: process.env.PipelineRegion});
         codepipeline.putJobFailureResult(params, function(err, data) {
             context.fail(message);
         });
     };
 
-
-    /**
-     * Function to wait for stack creation completion
-     * @param params
-     */
-    var waitForStackCreateComplete = function (params) {
-        AWS.config.update({region: config.ecs_cluster_region});
-        cloudformation.waitFor('stackCreateComplete', params, function(err, data) {
-            if (err) {
-                console.log(err, err.stack);
-                putJobFailure(err);
-            } else {
-                console.log(data);
-                putJobSuccess(data);
-            }
-        });
-    }
-
-
-    /**
-     * Function to wait for stack updation completion
-     * @param params
-     */
-    var waitForStackUpdateComplete = function (params) {
-        AWS.config.update({region: config.ecs_cluster_region});
-        cloudformation.waitFor('stackUpdateComplete', params, function(err, data) {
-            if (err) {
-                console.log(err, err.stack);
-                putJobFailure(err);
-            } else {
-                console.log(data);
-                putJobSuccess(data);
-            }
-        });
-    }
 
 
     /**
@@ -164,13 +126,14 @@ exports.handler = function(event, context, callback) {
         var serviceDefinition = YAML.load('/tmp/artifacts/ecs/service.yaml');
         console.log("service.yaml: " + JSON.stringify(serviceDefinition));
 
-        var stackName = serviceDefinition.Parameters.EnvironmentName.Default + '-' +
-            serviceDefinition.Resources.TaskDefinition.Properties.Family;
-
+        var stackName = serviceDefinition.Resources.TaskDefinition.Properties.Family;
         var params = {
             StackName: stackName.replace(/['"]+/g, ''), /* required */
             TemplateBody: JSON.stringify(serviceDefinition),
-            Capabilities: ['CAPABILITY_IAM']
+            Capabilities: ['CAPABILITY_IAM'],
+            NotificationARNs: [
+                process.env.NotificationARN
+            ]
         }
 
         console.log("Initiating service stack creation.");
@@ -182,22 +145,27 @@ exports.handler = function(event, context, callback) {
                         if (err) {
                             if ( err.message == "No updates are to be performed.") {
                                 putJobSuccess(data);
+                                sentSlackNotification("good", "Deployment completed!", "No updates are to be performed.");
                             } else {
                                 console.log("Updation failed: " + JSON.stringify(err));
                                 putJobFailure(err);
+                                sentSlackNotification("danger", "Deployment failed!", err.message);
                             }
 
                         } else {
                             console.log("Updation started successfully: " + JSON.stringify(data));
-                            waitForStackUpdateComplete({StackName: data.StackId});
+                            putJobSuccess(data);
+                            sentSlackNotification("good", "Deployment started successfully!", "Deployment started successfully.");
                         }
                     });
                 } else {
                     putJobFailure(err);
+                    sentSlackNotification("danger", "Deployment failed!", err.message);
                 }
             } else {
                 console.log("Creation started successfully: "+JSON.stringify(data));
-                waitForStackCreateComplete({StackName: data.StackId});
+                putJobSuccess(data);
+                sentSlackNotification("good", "Deployment started successfully!", "Deployment started successfully.");
             }
         });
     }
