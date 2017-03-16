@@ -22,6 +22,11 @@ sed -i -e "s@S3_BUCKET_NAME@${S3_BUCKET_NAME}@g" pipeline.yaml
 aws s3 cp pipeline.yaml s3://${S3_BUCKET_NAME}/
 rm pipeline.yaml
 rm pipeline.yaml-e
+cd ..
+aws s3 cp notification.yaml s3://${S3_BUCKET_NAME}/
+zip lambda_notify.zip lambda_notify.py
+aws s3 cp lambda_notify.zip s3://${S3_BUCKET_NAME}/
+rm lambda_notify.zip
 
 URL="https://console.aws.amazon.com/cloudformation/home?region=${AWS_REGION}#/stacks/new?templateURL=https://s3.amazonaws.com/${S3_BUCKET_NAME}/pipeline.yaml"
 echo -e "Open the Link in Browser --- ${GREEN}${URL}${NC}"

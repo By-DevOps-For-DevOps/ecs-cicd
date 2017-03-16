@@ -7,13 +7,9 @@
 4. GitHub Token with `admin:repo_hook` and `repo` scopes.
 
 ### Steps to install.
-1. Update `lambda/config.json` file.
-    - `codepipeline_region`: Region in which codepipeline is running. Some region may not have code build or code deploy,
-     in that case we have to use different region for running pipeline than ecs cluster region.
-    - `ecs_cluster_region`: Region in which ECS cluster is running
-2. Run `bash bin/configure.sh`.
-3. Open the link and at the end of the script to continue the installation.
-4. Sample parameters can be seen in `parameters.json`
+1. Run `bash bin/configure.sh`.
+2. Open the link and at the end of the script to continue the installation.
+3. Sample parameters can be seen in `parameters.json`
 
 ### ! Important
 In order to pull staging images to production account we need to assign production account permissions to staging ECR.
