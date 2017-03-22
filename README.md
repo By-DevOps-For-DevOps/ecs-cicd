@@ -14,7 +14,7 @@
    `export AWS_SECRET_ACCESS_KEY="secretkey"`     
    `export AWS_DEFAULT_REGION="ap-northeast-1"`   
 3. Run `bash bin/configure.sh`.
-4. Open the link and at the end of the script to continue the installation.
+4. Open the link at the end of the script to continue the installation.
 
 ### ! Important
 In order to pull staging images to production account we need to assign production account permissions to staging ECR.
