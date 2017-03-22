@@ -1,4 +1,4 @@
-lambda/node_modules/
+
 
 # Mac
 .DS_Store
@@ -6,8 +6,10 @@ lambda/node_modules/
 # Emacs
 *~
 
+# JetBrains
 .idea/
-# Lambda zip
-lambda/lambdafunction.zip
 
+# Lambda Function
+lambda/lambdafunction.zip
+lambda/node_modules/
 lambda/config.json
