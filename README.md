@@ -1,15 +1,20 @@
 # IaC for Creating CodePipeline
 
 ### Prerequisites
-1. Create an s3bucket to store the lamda function. The bucket should be in same region as your codepipeline.
-2. Create an ECR repository in the region containing the ECS CLUSTER.
+1. Create an S3 bucket to store the Lambda function. The bucket should be in same region as your codepipeline.
+2. Create an ECS repository in the same region as your ECS Cluster.
 3. The application repository must contain `ecs/service.yaml` and `buildspec.yaml`.
 4. GitHub Token with `admin:repo_hook` and `repo` scopes.
 
 ### Steps to install.
-1. Run `bash bin/configure.sh`.
-2. Open the link and at the end of the script to continue the installation.
-3. Sample parameters can be seen in `parameters.json`
+1. Clone the repo
+   `git clone https://github.com/microservices-today/ngp-app-codepipeline.git`
+2. Export AWS credentials     
+   `export AWS_ACCESS_KEY_ID="accesskey"`   
+   `export AWS_SECRET_ACCESS_KEY="secretkey"`     
+   `export AWS_DEFAULT_REGION="ap-northeast-1"`   
+3. Run `bash bin/configure.sh`.
+4. Open the link at the end of the script to continue the installation.
 
 ### ! Important
 In order to pull staging images to production account we need to assign production account permissions to staging ECR.
