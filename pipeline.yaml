@@ -166,8 +166,6 @@ Resources:
             Principal:
               Service:
                 - "codebuild.amazonaws.com"
-              AWS:
-                - !If [IsProductionCondition, !Sub "arn:aws:iam::${SourceECSAWSAccountId}:root", !Ref "AWS::NoValue"]
             Action:
               - "sts:AssumeRole"
       Policies:
@@ -182,7 +180,7 @@ Resources:
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                   - ecr:GetAuthorizationToken
-              - Resource: !Sub arn:aws:s3:::${ArtifactBucket}/*
+              - Resource: arn:aws:s3:::*
                 Effect: Allow
                 Action:
                   - s3:GetObject
@@ -212,7 +210,7 @@ Resources:
             Version: 2012-10-17
             Statement:
               - Resource:
-                  - !Sub arn:aws:s3:::${ArtifactBucket}/*
+                  - arn:aws:s3:::*
                 Effect: Allow
                 Action:
                   - s3:PutObject
@@ -384,15 +382,16 @@ Resources:
                 Category: Deploy
                 Owner: AWS
                 Version: 1
-                Provider: Lambda
+                Provider: CloudFormation
               InputArtifacts:
                 - Name: BuildOutput
               Configuration:
-                ActionMode: REPLACE_ON_FAILURE
+                ChangeSetName: Deploy
+                ActionMode: CREATE_UPDATE
                 Capabilities: CAPABILITY_NAMED_IAM
                 RoleArn: !GetAtt [CloudFormationExecutionRole, Arn]
-                StackName: !Join ["-", ["Ref":"AWS::StackName", "ngp-Nginx"]]
-                TemplatePath: TemplateSource::ecs/service.yaml
+                StackName: !Join ["-", ["Ref":"AWS::StackName", "app"]]
+                TemplatePath: BuildOutput::ecs/service.yaml
               RunOrder: 4
   NotificationStack:
     Type: AWS::CloudFormation::Stack
