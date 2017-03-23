@@ -146,16 +146,13 @@ Resources:
             }]
         }
       Policies:
-        - PolicyName: root
+        - PolicyName: CloudFormationRole
           PolicyDocument:
             Version: 2012-10-17
             Statement:
               - Resource: "*"
                 Effect: Allow
-                Action:
-                  - ecs:*
-                  - ecr:*
-                  - iam:*
+                Action: "*"
 
   CodeBuildServiceRole:
     Type: AWS::IAM::Role
@@ -384,14 +381,18 @@ Resources:
           Actions:
             - Name: Deploy
               ActionTypeId:
-                Category: Invoke
+                Category: Deploy
                 Owner: AWS
                 Version: 1
                 Provider: Lambda
-              Configuration:
-                FunctionName: !Ref LambdaFunction
               InputArtifacts:
                 - Name: BuildOutput
+              Configuration:
+                ActionMode: REPLACE_ON_FAILURE
+                Capabilities: CAPABILITY_NAMED_IAM
+                RoleArn: !GetAtt [CloudFormationExecutionRole, Arn]
+                StackName: !Join ["-", ["Ref":"AWS::StackName", "ngp-Nginx"]]
+                TemplatePath: TemplateSource::ecs/service.yaml
               RunOrder: 4
   NotificationStack:
     Type: AWS::CloudFormation::Stack
