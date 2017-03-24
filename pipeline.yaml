@@ -36,10 +36,11 @@ Metadata:
           - ReleaseVersion
           - DeployEnvironment
       - Label:
-          default: "Slack Notification"
+          default: "Notifications"
         Parameters:
           - SlackChannel
           - SlackWebHook
+          - Email
 Parameters:
   PipelineName:
     Description: A name for pipeline
@@ -105,6 +106,9 @@ Parameters:
   SlackWebHook:
     Type: String
     Description: Slack incoming webhook
+  Email:
+    Type: String
+    Description: Email Notification for CloudWatch Alarms
 
 Mappings:
   EnviormentTag:
@@ -225,6 +229,7 @@ Resources:
                   - cloudformation:*
                   - iam:PassRole
                   - lambda:*
+                  - ec2:CreateSecurityGroup
 
   LambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -256,12 +261,14 @@ Resources:
                   - cloudformation:UpdateStack
                   - cloudwatch:GetMetricStatistics
                   - ec2:Describe*
+                  - ec2:CreateSecurityGroup
                   - elasticloadbalancing:*
                   - ecs:*
                   - iam:*
                   - codepipeline:*
                   - logs:*
                   - sns:*
+                  - cloudwatch:*
 
   ArtifactBucket:
     Type: AWS::S3::Bucket
@@ -301,6 +308,8 @@ Resources:
             Value: !Ref DeployEnvironment
           - Name: BUILD_SCOPE
             Value: !FindInMap [EnviormentTag, !Ref DeployEnvironment, value]
+          - Name: EMAIL
+            Value: !Ref Email
           - Name: ENVIRONMENT_NAME
             Value:
               !Join ["-", [!Ref InfrastructureTagName, !FindInMap [EnviormentTag, !Ref DeployEnvironment, env]]]

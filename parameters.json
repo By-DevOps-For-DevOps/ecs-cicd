@@ -1,40 +1,74 @@
-[{
-  "ParameterKey": "ECRRepository",
-  "ParameterValue": "complete ECR URI"
-},
-{
-  "ParameterKey": "ECSClusterName",
-  "ParameterValue": "ci-cd-final"
-},
-{
-  "ParameterKey": "ECSRegion",
-  "ParameterValue": "ap-southeast-1"
-},
-{
-  "ParameterKey": "GitHubBranch",
-  "ParameterValue": "master"
-},
-{
-  "ParameterKey": "GitHubRepo",
-  "ParameterValue": "nginx-docker"
-},
-{
-  "ParameterKey": "GitHubToken",
-  "ParameterValue": "66bd89f3172dcbbeec29df9557472a5a3e1eb432"
-},
-{
-  "ParameterKey": "S3BucketKey",
-  "ParameterValue": "lambdafunction.zip"
-},
-{
-  "ParameterKey": "S3BucketName",
-  "ParameterValue": "cftemplates-us-east"
-},
-{
-  "ParameterKey": "GitHubUser",
-  "ParameterValue": "microservices-today"
-},
-{
-  "ParameterKey": "TagName",
-  "ParameterValue": "ci-cd-final"
-}]
+[
+  {
+    "ParameterKey": "GitHubRepo",
+    "ParameterValue": "ngp-nodejs"
+  },
+  {
+    "ParameterKey": "GitHubBranch",
+    "ParameterValue": "master"
+  },
+  {
+    "ParameterKey": "GitHubToken",
+    "ParameterValue": "12121212121212121212212"
+  },
+  {
+    "ParameterKey": "GitHubUser",
+    "ParameterValue": "microservices-today"
+  },
+  {
+    "ParameterKey": "S3BucketName",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "S3BucketKey",
+    "ParameterValue": "lambdafunction.zip"
+  },
+  {
+    "ParameterKey": "ECSRespositoryName",
+    "ParameterValue": "nodejs-app"
+  },
+  {
+    "ParameterKey": "ECSRegion",
+    "ParameterValue": "ap-northeast-1"
+  },
+  {
+    "ParameterKey": "SourceECSAWSAccountId",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "SourceECSRegion",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "SourceTag",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "ReleaseVersion",
+    "ParameterValue": "1.0.0"
+  },
+  {
+    "ParameterKey": "DeployEnvironment",
+    "ParameterValue": "development"
+  },
+  {
+    "ParameterKey": "SlackChannel",
+    "ParameterValue": "#testing"
+  },
+  {
+    "ParameterKey": "SlackWebHook",
+    "ParameterValue": "https://hooks.slack.com/services/xxxxxx/xxxxxxx/xxxxxxxxxxxx"
+  },
+  {
+    "ParameterKey": "InfrastructureTagName",
+    "ParameterValue": "ngp-infra"
+  },
+  {
+    "ParameterKey": "PipelineName",
+    "ParameterValue": "ngp-app"
+  },
+  {
+    "ParameterKey": "TagName",
+    "ParameterValue": "ngp-app"
+  }
+]
