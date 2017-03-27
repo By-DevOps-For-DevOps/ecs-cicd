@@ -41,5 +41,5 @@ Also, CodeBuild updates the CloudFormation template (service.yaml) to deploy the
 Service with environment specific information.
 
 ##### Deploy Stage
-AWS Lambda creates/updates the CloudFormation stack to create/update the 
+AWS CloudFormation creates/updates the CloudFormation stack to create/update the 
 application Service in ECS.
