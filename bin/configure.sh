@@ -12,17 +12,12 @@ if [[ -z "$AWS_REGION" ]]; then
     AWS_REGION=ap-northeast-1
 fi
 
-cd lambda
-npm install
-zip -r lambdafunction.zip ./*
-aws s3 cp lambdafunction.zip s3://${S3_BUCKET_NAME}/
-rm lambdafunction.zip
-cp ../pipeline.yaml .
-sed -i -e "s@S3_BUCKET_NAME@${S3_BUCKET_NAME}@g" pipeline.yaml
-aws s3 cp pipeline.yaml s3://${S3_BUCKET_NAME}/
-rm pipeline.yaml
-rm pipeline.yaml-e
-cd ..
+cp pipeline.yaml bin/
+sed -i -e "s@ECS_REGION@${AWS_REGION}@g" bin/pipeline.yaml
+sed -i -e "s@S3_BUCKET_NAME@${S3_BUCKET_NAME}@g" bin/pipeline.yaml
+aws s3 cp bin/pipeline.yaml s3://${S3_BUCKET_NAME}/
+rm bin/pipeline.yaml
+rm bin/pipeline.yaml-e
 aws s3 cp notification.yaml s3://${S3_BUCKET_NAME}/
 zip lambda_notify.zip lambda_notify.py
 aws s3 cp lambda_notify.zip s3://${S3_BUCKET_NAME}/

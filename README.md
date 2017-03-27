@@ -1,7 +1,7 @@
 # IaC for Creating CodePipeline
 
 ### Prerequisites
-1. Create an S3 bucket to store the Lambda function. The bucket should be in same region as your codepipeline.
+1. Create an S3 bucket to store the Lambda function for slack notifications. The bucket should be in same region as your codepipeline.
 2. Create an ECS repository in the same region as your ECS Cluster.
 3. The application repository must contain `ecs/service.yaml` and `buildspec.yaml`.
 4. GitHub Token with `admin:repo_hook` and `repo` scopes.
@@ -41,5 +41,5 @@ Also, CodeBuild updates the CloudFormation template (service.yaml) to deploy the
 Service with environment specific information.
 
 ##### Deploy Stage
-AWS Lambda creates/updates the CloudFormation stack to create/update the 
+AWS CloudFormation creates/updates the CloudFormation stack to create/update the 
 application Service in ECS.
