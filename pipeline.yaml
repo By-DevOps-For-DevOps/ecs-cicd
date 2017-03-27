@@ -18,7 +18,6 @@ Metadata:
           default: "S3 Bucket for Lambda Function"
         Parameters:
           - S3BucketName
-          - S3BucketKey
       - Label:
           default: "EC2 Container Service"
         Parameters:
@@ -68,6 +67,7 @@ Parameters:
     Type: String
     Description: ECS Respository Name (If URI is xxx.dkr.ecr.us-east-1.amazonaws.com/nginx, then nginx)
   ECSRegion:
+    Default: ECS_REGION
     Type: String
     Description: Region containing the ECS Cluster.
   SourceECSAWSAccountId:
@@ -86,7 +86,7 @@ Parameters:
   S3BucketKey:
     Type: String
     Description: Eg lambdafunction.zip
-    Default: lambdafunction.zip
+    Default: lambda_notify.zip
   ReleaseVersion:
     Type: String
     Description: Application version to be released/ FeatureId incase of feature CodePipeline. This will be appended to the docker image tag.
@@ -184,7 +184,7 @@ Resources:
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                   - ecr:GetAuthorizationToken
-              - Resource: arn:aws:s3:::*
+              - Resource: !Sub arn:aws:s3:::${ArtifactBucket}/*
                 Effect: Allow
                 Action:
                   - s3:GetObject
@@ -214,7 +214,7 @@ Resources:
             Version: 2012-10-17
             Statement:
               - Resource:
-                  - arn:aws:s3:::*
+                  - !Sub arn:aws:s3:::${ArtifactBucket}/*
                 Effect: Allow
                 Action:
                   - s3:PutObject
