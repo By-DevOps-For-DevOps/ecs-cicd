@@ -22,7 +22,6 @@ Metadata:
           default: "EC2 Container Service"
         Parameters:
           - ECSRespositoryName
-          - ECSRegion
       - Label:
           default: "ECS Production Parameters"
         Parameters:
@@ -66,10 +65,6 @@ Parameters:
   ECSRespositoryName:
     Type: String
     Description: ECS Respository Name (If URI is xxx.dkr.ecr.us-east-1.amazonaws.com/nginx, then nginx)
-  ECSRegion:
-    Default: ECS_REGION
-    Type: String
-    Description: Region containing the ECS Cluster.
   SourceECSAWSAccountId:
     Type: String
     Description: (Production Only) AWS Account Id of the Staging ECS Cluster
@@ -83,10 +78,6 @@ Parameters:
     Default: S3_BUCKET_NAME
     Type: String
     Description: S3 Bucket which contains the Lambda function
-  S3BucketKey:
-    Type: String
-    Description: Eg lambdafunction.zip
-    Default: lambda_notify.zip
   ReleaseVersion:
     Type: String
     Description: Application version to be released/ FeatureId incase of feature CodePipeline. This will be appended to the docker image tag.
@@ -102,7 +93,8 @@ Parameters:
     ConstraintDescription: Must specify production, staging, hotfix, development or feature.
   SlackChannel:
     Type: String
-    Description: Slack channel to be notified.
+    Default: "#"
+    Description: Slack channel to be notified. (start with '#')
   SlackWebHook:
     Type: String
     Description: Slack incoming webhook
@@ -172,6 +164,7 @@ Resources:
                 - "codebuild.amazonaws.com"
             Action:
               - "sts:AssumeRole"
+
       Policies:
         - PolicyName: root
           PolicyDocument:
@@ -231,45 +224,6 @@ Resources:
                   - lambda:*
                   - ec2:CreateSecurityGroup
 
-  LambdaExecutionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Sub lambda-${TagName}
-      Path: /
-      AssumeRolePolicyDocument: |
-        {
-            "Statement": [{
-                "Effect": "Allow",
-                "Principal": { "Service": [ "lambda.amazonaws.com" ]},
-                "Action": [ "sts:AssumeRole" ]
-            }]
-        }
-      Policies:
-        - PolicyName: root
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Resource: "*"
-                Effect: Allow
-                Action:
-                  - s3:*
-                  - autoscaling:Describe*
-                  - autoscaling:UpdateAutoScalingGroup
-                  - cloudformation:CreateStack
-                  - cloudformation:DeleteStack
-                  - cloudformation:DescribeStack*
-                  - cloudformation:UpdateStack
-                  - cloudwatch:GetMetricStatistics
-                  - ec2:Describe*
-                  - ec2:CreateSecurityGroup
-                  - elasticloadbalancing:*
-                  - ecs:*
-                  - iam:*
-                  - codepipeline:*
-                  - logs:*
-                  - sns:*
-                  - cloudwatch:*
-
   ArtifactBucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
@@ -291,7 +245,7 @@ Resources:
           - Name: AWS_ACCOUNT_ID
             Value: !Ref AWS::AccountId
           - Name: AWS_REGION
-            Value: !Ref ECSRegion
+            Value: !Ref AWS::Region
           - Name: ECR_NAME
             Value: !Ref ECSRespositoryName
           - Name: SOURCE_AWS_ACCOUNT_ID
@@ -315,25 +269,6 @@ Resources:
               !Join ["-", [!Ref InfrastructureTagName, !FindInMap [EnviormentTag, !Ref DeployEnvironment, env]]]
       ServiceRole: !Ref CodeBuildServiceRole
 
-  LambdaFunction:
-    Type: AWS::Lambda::Function
-    Properties:
-      Code:
-        S3Bucket: !Ref S3BucketName
-        S3Key: !Ref S3BucketKey
-      Handler: index.handler
-      Role: !GetAtt LambdaExecutionRole.Arn
-      Runtime: nodejs4.3
-      Timeout: 300
-      Environment:
-        Variables:
-          NotificationARN: !GetAtt NotificationStack.Outputs.CFNotifyEventSource
-          Channel: !Ref SlackChannel
-          SlackWebHook: !Ref SlackWebHook
-          DeployEnvironment: !Ref DeployEnvironment
-          EnvironmentName: !Join ["-", [!Ref InfrastructureTagName, !FindInMap [EnviormentTag, !Ref DeployEnvironment, env]]]
-          ECSRegion: !Ref ECSRegion
-          PipelineRegion: !Ref AWS::Region
   Pipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
@@ -399,7 +334,7 @@ Resources:
                 ActionMode: CREATE_UPDATE
                 Capabilities: CAPABILITY_NAMED_IAM
                 RoleArn: !GetAtt [CloudFormationExecutionRole, Arn]
-                StackName: !Join ["-", ["Ref":"AWS::StackName", "app"]]
+                StackName: !Join ["-", ["Ref":"AWS::StackName", !Ref ECSRespositoryName]]
                 TemplatePath: BuildOutput::ecs/service.yaml
               RunOrder: 4
   NotificationStack:
