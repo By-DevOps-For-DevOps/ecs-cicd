@@ -131,7 +131,7 @@ Resources:
   CloudFormationExecutionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub cfn-${TagName}
+      RoleName: !Sub cfn-${TagName}-${DeployEnvironment}
       Path: /
       AssumeRolePolicyDocument: |
         {
@@ -153,7 +153,7 @@ Resources:
   CodeBuildServiceRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub cb-${TagName}
+      RoleName: !Sub cb-${TagName}-${DeployEnvironment}
       Path: /
       AssumeRolePolicyDocument:
         Statement:
@@ -162,6 +162,13 @@ Resources:
             Principal:
               Service:
                 - "codebuild.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+          -
+            Effect: "Allow"
+            Principal:
+              AWS:
+                - !If [IsProductionCondition, !Sub "arn:aws:iam::${SourceECSAWSAccountId}:root", !Ref "AWS::NoValue"]
             Action:
               - "sts:AssumeRole"
 
@@ -191,7 +198,7 @@ Resources:
   CodePipelineServiceRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub cp-${TagName}
+      RoleName: !Sub cp-${TagName}-${DeployEnvironment}
       Path: /
       AssumeRolePolicyDocument: |
         {
@@ -260,6 +267,8 @@ Resources:
             Value: !Ref ReleaseVersion
           - Name: DEPLOY_ENVIRONMENT
             Value: !Ref DeployEnvironment
+          - Name: TAG_NAME
+            Value: !Ref TagName
           - Name: BUILD_SCOPE
             Value: !FindInMap [EnviormentTag, !Ref DeployEnvironment, value]
           - Name: EMAIL
