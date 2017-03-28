@@ -1,7 +1,7 @@
 [
   {
     "ParameterKey": "GitHubRepo",
-    "ParameterValue": "ngp-nodejs"
+    "ParameterValue": "ngp-nginx"
   },
   {
     "ParameterKey": "GitHubBranch",
@@ -9,7 +9,7 @@
   },
   {
     "ParameterKey": "GitHubToken",
-    "ParameterValue": "12121212121212121212212"
+    "ParameterValue": ""
   },
   {
     "ParameterKey": "GitHubUser",
@@ -17,19 +17,11 @@
   },
   {
     "ParameterKey": "S3BucketName",
-    "ParameterValue": ""
-  },
-  {
-    "ParameterKey": "S3BucketKey",
-    "ParameterValue": "lambdafunction.zip"
+    "ParameterValue": "ngp-app"
   },
   {
     "ParameterKey": "ECSRespositoryName",
-    "ParameterValue": "nodejs-app"
-  },
-  {
-    "ParameterKey": "ECSRegion",
-    "ParameterValue": "ap-northeast-1"
+    "ParameterValue": "ngp-nginx"
   },
   {
     "ParameterKey": "SourceECSAWSAccountId",
@@ -53,11 +45,11 @@
   },
   {
     "ParameterKey": "SlackChannel",
-    "ParameterValue": "#testing"
+    "ParameterValue": "#"
   },
   {
     "ParameterKey": "SlackWebHook",
-    "ParameterValue": "https://hooks.slack.com/services/xxxxxx/xxxxxxx/xxxxxxxxxxxx"
+    "ParameterValue": "https://hooks.slack.com/xxxxxxxxxxxxxxxxxxxxxxxxxxx"
   },
   {
     "ParameterKey": "InfrastructureTagName",
@@ -70,5 +62,9 @@
   {
     "ParameterKey": "TagName",
     "ParameterValue": "ngp-app"
+  },
+  {
+    "ParameterKey": "Email",
+    "ParameterValue": ""
   }
 ]
