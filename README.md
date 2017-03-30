@@ -9,6 +9,7 @@
 ### Steps to install.
 1. Clone the repo
    `git clone https://github.com/microservices-today/ngp-app-codepipeline.git`
+   `cd ngp-app-codepipeline`
 2. Export AWS credentials     
    `export AWS_ACCESS_KEY_ID="accesskey"`   
    `export AWS_SECRET_ACCESS_KEY="secretkey"`     
