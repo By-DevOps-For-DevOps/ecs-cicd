@@ -78,9 +78,10 @@ Parameters:
     Default: S3_BUCKET_NAME
     Type: String
     Description: S3 Bucket which contains the Lambda function
-  ReleaseVersion:
+  S3BucketKey:
     Type: String
-    Description: Application version to be released/ FeatureId incase of feature CodePipeline. This will be appended to the docker image tag.
+    Description: Eg lambdafunction.zip
+    Default: lambdafunction.zip
   DeployEnvironment:
     Type: String
     Description: Specify the environment
@@ -259,8 +260,6 @@ Resources:
             Value: !Ref SourceECSAWSAccountId
           - Name: SOURCE_AWS_REGION
             Value: !Ref SourceECSRegion
-          - Name: SOURCE_TAG
-            Value: !Ref SourceTag
           - Name: GITHUB_TOKEN
             Value: !Ref GitHubToken
           - Name: RELEASE_VERSION
@@ -269,6 +268,10 @@ Resources:
             Value: !Ref DeployEnvironment
           - Name: TAG_NAME
             Value: !Ref TagName
+          - Name: GITHUB_REPO
+            Value: !Ref GitHubRepo
+          - Name: GITHUB_USER
+            Value: !Ref GitHubUser
           - Name: BUILD_SCOPE
             Value: !FindInMap [EnviormentTag, !Ref DeployEnvironment, value]
           - Name: EMAIL
