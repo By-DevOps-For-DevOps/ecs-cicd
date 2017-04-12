@@ -2,9 +2,10 @@
 
 ### Prerequisites
 1. Create an S3 bucket to store the Lambda function for slack notifications. The bucket should be in same region as your codepipeline.
-2. Create an ECS repository in the same region as your ECS Cluster.
-3. The application repository must contain `ecs/service.yaml` and `buildspec.yaml`.
-4. GitHub Token with `admin:repo_hook` and `repo` scopes.
+2. Create an S3 bucket to store the App specific environment variable if any. The bucket should be in same region as your codepipeline.
+3. Create an ECS repository in the same region as your ECS Cluster.
+4. The application repository must contain `ecs/service.yaml` and `buildspec.yaml`.
+5. GitHub Token with `admin:repo_hook` and `repo` scopes.
 
 ### Steps to install.
 1. Clone the repo  
@@ -44,3 +45,19 @@ Service with environment specific information.
 ##### Deploy Stage
 AWS CloudFormation creates/updates the CloudFormation stack to create/update the 
 application Service in ECS.
+
+
+### App specific environment variables
+App specific environment variables can be passed to CodePipeline by specifying the S3 Bucket and filename which contains the environment variables.
+- First line should be a newline
+- Variables should be in key value format
+- Keep the tab spaces same as example file
+Eg:
+```
+
+        Environment:
+        - Name: NODE_ENV
+          Value: 6.0
+```
+
+(Example file)[./code_build_env.yaml]

@@ -78,6 +78,12 @@ Parameters:
     Default: S3_BUCKET_NAME
     Type: String
     Description: S3 Bucket which contains the Lambda function
+  EnvVariablesS3BucketName:
+    Type: String
+    Description: S3 Bucket which contains App specific Environment variables
+  EnvVariablesS3Key:
+    Type: String
+    Description: S3 file path which contains App specific Environment variables
   ReleaseVersion:
     Type: String
     Description: Application version to be released/ FeatureId incase of feature CodePipeline. This will be appended to the docker image tag.
@@ -126,6 +132,7 @@ Conditions:
   IsHotfixCondition: !Equals [ !Ref DeployEnvironment, hotfix ]
   IsDevelopmentCondition: !Equals [ !Ref DeployEnvironment, development ]
   IsFeatureCondition: !Equals [ !Ref DeployEnvironment, feature ]
+  IsEnvVariablesS3BucketEmpty: !Equals [ !Ref EnvVariablesS3BucketName, '' ]
 
 Resources:
   CloudFormationExecutionRole:
@@ -184,16 +191,25 @@ Resources:
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                   - ecr:GetAuthorizationToken
+                  - ecr:*
               - Resource: !Sub arn:aws:s3:::${ArtifactBucket}/*
                 Effect: Allow
                 Action:
                   - s3:GetObject
                   - s3:PutObject
                   - s3:GetObjectVersion
-              - Resource: "*"
-                Effect: Allow
-                Action:
-                  - ecr:*
+              - !If
+                - IsEnvVariablesS3BucketEmpty
+                - !Ref AWS::NoValue
+                - Resource:
+                    - !Sub arn:aws:s3:::${EnvVariablesS3BucketName}/*
+                  Effect: Allow
+                  Action:
+                    - s3:PutObject
+                    - s3:GetObject
+                    - s3:GetObjectVersion
+                    - s3:GetBucketVersioning
+
 
   CodePipelineServiceRole:
     Type: AWS::IAM::Role
@@ -221,6 +237,17 @@ Resources:
                   - s3:GetObject
                   - s3:GetObjectVersion
                   - s3:GetBucketVersioning
+              - !If
+                - IsEnvVariablesS3BucketEmpty
+                - !Ref AWS::NoValue
+                - Resource:
+                    - !Sub arn:aws:s3:::${EnvVariablesS3BucketName}/*
+                  Effect: Allow
+                  Action:
+                    - s3:PutObject
+                    - s3:GetObject
+                    - s3:GetObjectVersion
+                    - s3:GetBucketVersioning
               - Resource: "*"
                 Effect: Allow
                 Action:
@@ -276,6 +303,10 @@ Resources:
           - Name: ENVIRONMENT_NAME
             Value:
               !Join ["-", [!Ref InfrastructureTagName, !FindInMap [EnviormentTag, !Ref DeployEnvironment, env]]]
+          - Name: ENV_VARIABLES_S3_BUCKET
+            Value: !Ref EnvVariablesS3BucketName
+          - Name: ENV_VARIABLES_S3_KEY
+            Value: !Ref EnvVariablesS3Key
       ServiceRole: !Ref CodeBuildServiceRole
 
   Pipeline:
