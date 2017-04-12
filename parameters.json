@@ -66,5 +66,13 @@
   {
     "ParameterKey": "Email",
     "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "EnvVariablesS3BucketName",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "EnvVariablesS3Key",
+    "ParameterValue": ""
   }
 ]
