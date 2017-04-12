@@ -304,7 +304,25 @@ Resources:
           - Name: ENV_VARIABLES_S3_KEY
             Value: !Ref EnvVariablesS3Key
       ServiceRole: !Ref CodeBuildServiceRole
-
+  CodeBuildRelease:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Artifacts:
+        Location: !Ref ArtifactBucket
+        Type: "S3"
+      Source:
+        Location: !Sub ${ArtifactBucket}/source.zip
+        Type: "GITHUB"
+      Environment:
+        ComputeType: "BUILD_GENERAL1_LARGE"
+        Image: "aws/codebuild/docker:1.12.1"
+        Type: "LINUX_CONTAINER"
+        EnvironmentVariables:
+          - Name: GITHUB_TOKEN
+            Value: !Ref GitHubToken
+          - Name: DEPLOY_ENVIRONMENT
+            Value: 'Release'
+      ServiceRole: !Ref CodeBuildServiceRole
   Pipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
@@ -373,6 +391,33 @@ Resources:
                 StackName: !Join ["-", ["Ref":"AWS::StackName", !Ref ECSRespositoryName]]
                 TemplatePath: BuildOutput::ecs/service.yaml
               RunOrder: 4
+        - !If
+          - IsStagingCondition
+          - Name: Release
+            Actions:
+              - Name: Approve-Release
+                ActionTypeId:
+                  Category: Approval
+                  Owner: AWS
+                  Provider: Manual
+                  Version: '1'
+                Configuration:
+                  CustomData: 'Are you ready to release to Production?'
+                RunOrder: 4
+              - Name: Release
+                ActionTypeId:
+                  Category: Build
+                  Owner: AWS
+                  Version: 1
+                  Provider: CodeBuild
+                Configuration:
+                  ProjectName: !Ref CodeBuildRelease
+                InputArtifacts:
+                  - Name: BuildOutput
+                OutputArtifacts:
+                  - Name: Release
+                RunOrder: 5
+          - !Ref AWS::NoValue
   NotificationStack:
     Type: AWS::CloudFormation::Stack
     Properties:
