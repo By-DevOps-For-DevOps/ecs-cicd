@@ -31,7 +31,6 @@ Metadata:
       - Label:
           default: "Release Details"
         Parameters:
-          - ReleaseVersion
           - DeployEnvironment
       - Label:
           default: "Notifications"
@@ -262,8 +261,6 @@ Resources:
             Value: !Ref SourceECSRegion
           - Name: GITHUB_TOKEN
             Value: !Ref GitHubToken
-          - Name: RELEASE_VERSION
-            Value: !Ref ReleaseVersion
           - Name: DEPLOY_ENVIRONMENT
             Value: !Ref DeployEnvironment
           - Name: TAG_NAME
