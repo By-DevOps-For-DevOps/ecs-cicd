@@ -31,7 +31,10 @@ Metadata:
       - Label:
           default: "Release Details"
         Parameters:
+          - ReleasePlan
           - DeployEnvironment
+          - ReleaseManagerGitEmail
+          - ReleaseManagerGitUsername
       - Label:
           default: "Notifications"
         Parameters:
@@ -64,6 +67,15 @@ Parameters:
   ECSRespositoryName:
     Type: String
     Description: ECS Respository Name (If URI is xxx.dkr.ecr.us-east-1.amazonaws.com/nginx, then nginx)
+  ReleasePlan:
+    Type: String
+    Description: Release version (Eg. 1.0.0) Plan for this Staging Pipeline (This should be updated after each release)
+  ReleaseManagerGitUsername:
+    Type: String
+    Description: Github Username of the Release Manager
+  ReleaseManagerGitEmail:
+    Type: String
+    Description: Github Email of the Release Manager  
   SourceECSAWSAccountId:
     Type: String
     Description: (Production Only) AWS Account Id of the Staging ECS Cluster
@@ -273,6 +285,8 @@ Resources:
             Value: !FindInMap [EnviormentTag, !Ref DeployEnvironment, value]
           - Name: EMAIL
             Value: !Ref Email
+          - Name: RELEASE_PLAN
+            Value: !Ref ReleasePlan
           - Name: ENVIRONMENT_NAME
             Value:
               !Join ["-", [!Ref InfrastructureTagName, !FindInMap [EnviormentTag, !Ref DeployEnvironment, env]]]
@@ -288,13 +302,23 @@ Resources:
         Type: "GITHUB"
       Environment:
         ComputeType: "BUILD_GENERAL1_LARGE"
-        Image: "aws/codebuild/docker:1.12.1"
+        Image: "aws/codebuild/ubuntu-base:14.04"
         Type: "LINUX_CONTAINER"
         EnvironmentVariables:
           - Name: GITHUB_TOKEN
             Value: !Ref GitHubToken
+          - Name: GITHUB_REPO
+            Value: !Ref GitHubRepo
+          - Name: GITHUB_USER
+            Value: !Ref GitHubUser
           - Name: DEPLOY_ENVIRONMENT
-            Value: 'Release'
+            Value: 'release'
+          - Name: RELEASE_PLAN
+            Value: !Ref ReleasePlan
+          - Name: GITHUB_USERNAME
+            Value: !Ref ReleaseManagerGitUsername
+          - Name: GITHUB_EMAIL
+            Value: !Ref ReleaseManagerGitEmail
       ServiceRole: !Ref CodeBuildServiceRole
   Pipeline:
     Type: AWS::CodePipeline::Pipeline
