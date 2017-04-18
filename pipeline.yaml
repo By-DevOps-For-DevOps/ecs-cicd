@@ -27,7 +27,6 @@ Metadata:
         Parameters:
           - SourceECSAWSAccountId
           - SourceECSRegion
-          - SourceTag
       - Label:
           default: "Release Details"
         Parameters:
@@ -69,22 +68,19 @@ Parameters:
     Description: ECS Respository Name (If URI is xxx.dkr.ecr.us-east-1.amazonaws.com/nginx, then nginx)
   ReleasePlan:
     Type: String
-    Description: Release version (Eg. 1.0.0) Plan for this Staging Pipeline (This should be updated after each release)
+    Description: (Staging Only) Release version (Eg. 1.0.0) Plan for this Staging Pipeline (This should be updated after each release)
   ReleaseManagerGitUsername:
     Type: String
-    Description: Github Username of the Release Manager
+    Description: (Staging Only)Github Username of the Release Manager
   ReleaseManagerGitEmail:
     Type: String
-    Description: Github Email of the Release Manager  
+    Description: (Staging Only)Github Email of the Release Manager  
   SourceECSAWSAccountId:
     Type: String
     Description: (Production Only) AWS Account Id of the Staging ECS Cluster
   SourceECSRegion:
     Type: String
     Description: (Production Only) Region containing the Staging ECS Cluster
-  SourceTag:
-    Type: String
-    Description: (Production Only) Tag of the Staging ECR Image to be deployed
   S3BucketName:
     Default: S3_BUCKET_NAME
     Type: String
