@@ -23,6 +23,13 @@ zip lambda_notify.zip lambda_notify.py
 aws s3 cp lambda_notify.zip s3://${S3_BUCKET_NAME}/
 rm lambda_notify.zip
 
+cd lambda
+npm install
+zip -r lambdafunction.zip ./*
+aws s3 cp lambdafunction.zip s3://${S3_BUCKET_NAME}/
+rm lambdafunction.zip
+
+
 URL="https://console.aws.amazon.com/cloudformation/home?region=${AWS_REGION}#/stacks/new?templateURL=https://s3.amazonaws.com/${S3_BUCKET_NAME}/pipeline.yaml"
 echo -e "Open the Link in Browser --- ${GREEN}${URL}${NC}"
 if which xdg-open > /dev/null
