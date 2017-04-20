@@ -27,12 +27,13 @@ Metadata:
         Parameters:
           - SourceECSAWSAccountId
           - SourceECSRegion
-          - SourceTag
       - Label:
           default: "Release Details"
         Parameters:
-          - ReleaseVersion
+          - ReleasePlan
           - DeployEnvironment
+          - ReleaseManagerGitEmail
+          - ReleaseManagerGitUsername
       - Label:
           default: "Notifications"
         Parameters:
@@ -65,15 +66,21 @@ Parameters:
   ECSRespositoryName:
     Type: String
     Description: ECS Respository Name (If URI is xxx.dkr.ecr.us-east-1.amazonaws.com/nginx, then nginx)
+  ReleasePlan:
+    Type: String
+    Description: (Staging Only) Release version (Eg. 1.0.0) Plan for this Staging Pipeline (This should be updated after each release)
+  ReleaseManagerGitUsername:
+    Type: String
+    Description: (Staging Only)Github Username of the Release Manager
+  ReleaseManagerGitEmail:
+    Type: String
+    Description: (Staging Only)Github Email of the Release Manager  
   SourceECSAWSAccountId:
     Type: String
     Description: (Production Only) AWS Account Id of the Staging ECS Cluster
   SourceECSRegion:
     Type: String
     Description: (Production Only) Region containing the Staging ECS Cluster
-  SourceTag:
-    Type: String
-    Description: (Production Only) Tag of the Staging ECR Image to be deployed
   S3BucketName:
     Default: S3_BUCKET_NAME
     Type: String
@@ -84,9 +91,6 @@ Parameters:
   EnvVariablesS3Key:
     Type: String
     Description: S3 file path which contains App specific Environment variables
-  ReleaseVersion:
-    Type: String
-    Description: Application version to be released/ FeatureId incase of feature CodePipeline. This will be appended to the docker image tag.
   DeployEnvironment:
     Type: String
     Description: Specify the environment
@@ -286,20 +290,22 @@ Resources:
             Value: !Ref SourceECSAWSAccountId
           - Name: SOURCE_AWS_REGION
             Value: !Ref SourceECSRegion
-          - Name: SOURCE_TAG
-            Value: !Ref SourceTag
           - Name: GITHUB_TOKEN
             Value: !Ref GitHubToken
-          - Name: RELEASE_VERSION
-            Value: !Ref ReleaseVersion
           - Name: DEPLOY_ENVIRONMENT
             Value: !Ref DeployEnvironment
           - Name: TAG_NAME
             Value: !Ref TagName
+          - Name: GITHUB_REPO
+            Value: !Ref GitHubRepo
+          - Name: GITHUB_USER
+            Value: !Ref GitHubUser
           - Name: BUILD_SCOPE
             Value: !FindInMap [EnviormentTag, !Ref DeployEnvironment, value]
           - Name: EMAIL
             Value: !Ref Email
+          - Name: RELEASE_PLAN
+            Value: !Ref ReleasePlan
           - Name: ENVIRONMENT_NAME
             Value:
               !Join ["-", [!Ref InfrastructureTagName, !FindInMap [EnviormentTag, !Ref DeployEnvironment, env]]]
@@ -307,6 +313,35 @@ Resources:
             Value: !Ref EnvVariablesS3BucketName
           - Name: ENV_VARIABLES_S3_KEY
             Value: !Ref EnvVariablesS3Key
+      ServiceRole: !Ref CodeBuildServiceRole
+  CodeBuildRelease:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Artifacts:
+        Location: !Ref ArtifactBucket
+        Type: "S3"
+      Source:
+        Location: !Sub ${ArtifactBucket}/source.zip
+        Type: "GITHUB"
+      Environment:
+        ComputeType: "BUILD_GENERAL1_LARGE"
+        Image: "aws/codebuild/ubuntu-base:14.04"
+        Type: "LINUX_CONTAINER"
+        EnvironmentVariables:
+          - Name: GITHUB_TOKEN
+            Value: !Ref GitHubToken
+          - Name: GITHUB_REPO
+            Value: !Ref GitHubRepo
+          - Name: GITHUB_USER
+            Value: !Ref GitHubUser
+          - Name: DEPLOY_ENVIRONMENT
+            Value: 'release'
+          - Name: RELEASE_PLAN
+            Value: !Ref ReleasePlan
+          - Name: GITHUB_USERNAME
+            Value: !Ref ReleaseManagerGitUsername
+          - Name: GITHUB_EMAIL
+            Value: !Ref ReleaseManagerGitEmail
       ServiceRole: !Ref CodeBuildServiceRole
 
   Pipeline:
@@ -377,6 +412,33 @@ Resources:
                 StackName: !Join ["-", ["Ref":"AWS::StackName", !Ref ECSRespositoryName]]
                 TemplatePath: BuildOutput::ecs/service.yaml
               RunOrder: 4
+        - !If
+          - IsStagingCondition
+          - Name: Release
+            Actions:
+              - Name: Approve-Release
+                ActionTypeId:
+                  Category: Approval
+                  Owner: AWS
+                  Provider: Manual
+                  Version: '1'
+                Configuration:
+                  CustomData: 'Are you ready to release to Production?'
+                RunOrder: 4
+              - Name: Release
+                ActionTypeId:
+                  Category: Build
+                  Owner: AWS
+                  Version: 1
+                  Provider: CodeBuild
+                Configuration:
+                  ProjectName: !Ref CodeBuildRelease
+                InputArtifacts:
+                  - Name: BuildOutput
+                OutputArtifacts:
+                  - Name: Release
+                RunOrder: 5
+          - !Ref AWS::NoValue
   NotificationStack:
     Type: AWS::CloudFormation::Stack
     Properties:
