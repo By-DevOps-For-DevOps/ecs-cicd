@@ -22,6 +22,7 @@ Metadata:
           default: "EC2 Container Service"
         Parameters:
           - ECSRespositoryName
+          - ECSRegion
       - Label:
           default: "ECS Production Parameters"
         Parameters:
@@ -72,6 +73,9 @@ Parameters:
   ECSRespositoryName:
     Type: String
     Description: ECS Respository Name (If URI is xxx.dkr.ecr.us-east-1.amazonaws.com/nginx, then nginx)
+  ECSRegion:
+    Type: String
+    Description: Region containing the ECS Cluster.
   ReleasePlan:
     Type: String
     Description: (Staging Only) Release version (Eg. 1.0.0) Plan for this Staging Pipeline (This should be updated after each release)
@@ -319,7 +323,7 @@ Resources:
     Properties:
       Code:
         S3Bucket: !Ref S3BucketName
-        S3Key: !Ref S3BucketKey
+        S3Key: lambdafunction.zip
       Handler: index.handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs4.3
@@ -333,6 +337,7 @@ Resources:
           EnvironmentName: !Join ["-", [!Ref InfrastructureTagName, !FindInMap [EnviormentTag, !Ref DeployEnvironment, env]]]
           ECSRegion: !Ref ECSRegion
           PipelineRegion: !Ref AWS::Region
+          AppStackName: !Join ["-", ["Ref":"AWS::StackName", !Ref ECSRespositoryName]]
 
   CodeBuildProject:
     Type: AWS::CodeBuild::Project

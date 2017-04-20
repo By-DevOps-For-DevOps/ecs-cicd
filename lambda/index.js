@@ -123,51 +123,57 @@ exports.handler = function(event, context, callback) {
      * Function to update service definition
      */
     var updateServiceDefinition = function () {
-        var serviceDefinition = YAML.load('/tmp/artifacts/ecs/service.yaml');
-        console.log("service.yaml: " + JSON.stringify(serviceDefinition));
+        // var serviceDefinition = YAML.load('/tmp/artifacts/ecs/service.yaml');
+        // console.log("service.yaml: " + JSON.stringify(serviceDefinition));
 
-        var stackName = serviceDefinition.Resources.TaskDefinition.Properties.Family;
-        var params = {
-            StackName: stackName.replace(/['"]+/g, ''), /* required */
-            TemplateBody: JSON.stringify(serviceDefinition),
-            Capabilities: ['CAPABILITY_IAM'],
-            NotificationARNs: [
-                process.env.NotificationARN
-            ]
-        }
-
-        console.log("Initiating service stack creation.");
-        cloudformation.createStack(params, function (err, data) {
-            if (err)  {
-                console.log("Creation failed: "+JSON.stringify(err));
-                if (err.code == "AlreadyExistsException") {
-                    cloudformation.updateStack(params, function (err, data) {
-                        if (err) {
-                            if ( err.message == "No updates are to be performed.") {
-                                putJobSuccess(data);
-                                sentSlackNotification("good", "Deployment completed!", "No updates are to be performed.");
-                            } else {
-                                console.log("Updation failed: " + JSON.stringify(err));
-                                putJobFailure(err);
-                                sentSlackNotification("danger", "Deployment failed!", err.message);
-                            }
-
-                        } else {
-                            console.log("Updation started successfully: " + JSON.stringify(data));
-                            putJobSuccess(data);
-                            sentSlackNotification("good", "Deployment started successfully!", "Deployment started successfully.");
-                        }
-                    });
-                } else {
-                    putJobFailure(err);
-                    sentSlackNotification("danger", "Deployment failed!", err.message);
-                }
-            } else {
-                console.log("Creation started successfully: "+JSON.stringify(data));
-                putJobSuccess(data);
-                sentSlackNotification("good", "Deployment started successfully!", "Deployment started successfully.");
+        var filename = '/tmp/artifacts/ecs/service.yaml';
+        fs.readFile(filename, 'utf8', function(err, TemplateBody) {
+            var stackName = process.env.AppStackName
+            var params = {
+                StackName: stackName.replace(/['"]+/g, ''), /* required */
+                TemplateBody: TemplateBody,
+                Capabilities: ['CAPABILITY_IAM'],
+                NotificationARNs: [
+                    process.env.NotificationARN
+                ]
             }
+
+            console.log("Initiating service stack creation.");
+            cloudformation.createStack(params, function (err, data) {
+                if (err)  {
+                    console.log("Creation failed: "+JSON.stringify(err));
+                    if (err.code == "AlreadyExistsException") {
+                        cloudformation.updateStack(params, function (err, data) {
+                            if (err) {
+                                if ( err.message == "No updates are to be performed.") {
+                                    putJobSuccess(data);
+                                    sentSlackNotification("good", "Deployment completed!", "No updates are to be performed.");
+                                } else {
+                                    console.log("Updation failed: " + JSON.stringify(err));
+                                    putJobFailure(err);
+                                    sentSlackNotification("danger", "Deployment failed!", err.message);
+                                }
+
+                            } else {
+                                console.log("Updation started successfully: " + JSON.stringify(data));
+                                putJobSuccess(data);
+                                sentSlackNotification("good", "Deployment started successfully!", "Deployment started successfully.");
+                            }
+                        });
+                    } else {
+                        putJobFailure(err);
+                        sentSlackNotification("danger", "Deployment failed!", err.message);
+                    }
+                } else {
+                    console.log("Creation started successfully: "+JSON.stringify(data));
+                    putJobSuccess(data);
+                    sentSlackNotification("good", "Deployment started successfully!", "Deployment started successfully.");
+                }
+            });
         });
+
+
+
     }
 
 
