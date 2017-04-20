@@ -41,6 +41,12 @@ Metadata:
           - SlackWebHook
           - Email
 Parameters:
+  DeploymentType:
+    Description: Choose between deployment with Lambda or Cloudformation. Use Lambda in regions that lack codebuild.
+    Type: String
+    AllowedValues:
+      - lambda
+      - cloudformation
   PipelineName:
     Description: A name for pipeline
     Type: String
@@ -74,7 +80,7 @@ Parameters:
     Description: (Staging Only)Github Username of the Release Manager
   ReleaseManagerGitEmail:
     Type: String
-    Description: (Staging Only)Github Email of the Release Manager  
+    Description: (Staging Only)Github Email of the Release Manager
   SourceECSAWSAccountId:
     Type: String
     Description: (Production Only) AWS Account Id of the Staging ECS Cluster
@@ -136,7 +142,11 @@ Conditions:
   IsHotfixCondition: !Equals [ !Ref DeployEnvironment, hotfix ]
   IsDevelopmentCondition: !Equals [ !Ref DeployEnvironment, development ]
   IsFeatureCondition: !Equals [ !Ref DeployEnvironment, feature ]
-  IsEnvVariablesS3BucketEmpty: !Equals [ !Ref EnvVariablesS3BucketName, '' ]
+
+  IsEnvVariablesS3BucketEmpty: !Equals [ !Ref EnvVariablesS3BucketName, '' ]  
+  
+  IsLambdaDeployment: !Equals [ !Ref DeploymentType, lambda ]
+  IsCfnDeployment: !Equals [ !Ref DeploymentType, cloudformation ]
 
 Resources:
   CloudFormationExecutionRole:
@@ -265,6 +275,64 @@ Resources:
   ArtifactBucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
+  
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub lambda-${TagName}
+      Path: /
+      AssumeRolePolicyDocument: |
+        {
+            "Statement": [{
+                "Effect": "Allow",
+                "Principal": { "Service": [ "lambda.amazonaws.com" ]},
+                "Action": [ "sts:AssumeRole" ]
+            }]
+        }
+      Policies:
+        - PolicyName: root
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - s3:*
+                  - autoscaling:Describe*
+                  - autoscaling:UpdateAutoScalingGroup
+                  - cloudformation:CreateStack
+                  - cloudformation:DeleteStack
+                  - cloudformation:DescribeStack*
+                  - cloudformation:UpdateStack
+                  - cloudwatch:GetMetricStatistics
+                  - ec2:Describe*
+                  - elasticloadbalancing:*
+                  - ecs:*
+                  - iam:*
+                  - codepipeline:*
+                  - logs:*
+                  - sns:*
+
+
+  LambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Ref S3BucketName
+        S3Key: !Ref S3BucketKey
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: nodejs4.3
+      Timeout: 300
+      Environment:
+        Variables:
+          NotificationARN: !GetAtt NotificationStack.Outputs.CFNotifyEventSource
+          Channel: !Ref SlackChannel
+          SlackWebHook: !Ref SlackWebHook
+          DeployEnvironment: !Ref DeployEnvironment
+          EnvironmentName: !Join ["-", [!Ref InfrastructureTagName, !FindInMap [EnviormentTag, !Ref DeployEnvironment, env]]]
+          ECSRegion: !Ref ECSRegion
+          PipelineRegion: !Ref AWS::Region
 
   CodeBuildProject:
     Type: AWS::CodeBuild::Project
@@ -343,7 +411,6 @@ Resources:
           - Name: GITHUB_EMAIL
             Value: !Ref ReleaseManagerGitEmail
       ServiceRole: !Ref CodeBuildServiceRole
-
   Pipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
@@ -394,24 +461,43 @@ Resources:
               OutputArtifacts:
                 - Name: BuildOutput
               RunOrder: 3
-        - Name: Deploy
-          Actions:
-            - Name: Deploy
-              ActionTypeId:
-                Category: Deploy
-                Owner: AWS
-                Version: 1
-                Provider: CloudFormation
-              InputArtifacts:
-                - Name: BuildOutput
-              Configuration:
-                ChangeSetName: Deploy
-                ActionMode: CREATE_UPDATE
-                Capabilities: CAPABILITY_NAMED_IAM
-                RoleArn: !GetAtt [CloudFormationExecutionRole, Arn]
-                StackName: !Join ["-", ["Ref":"AWS::StackName", !Ref ECSRespositoryName]]
-                TemplatePath: BuildOutput::ecs/service.yaml
-              RunOrder: 4
+        - !If
+          - IsCfnDeployment
+          - Name: Deploy
+            Actions:
+              - Name: Deploy
+                ActionTypeId:
+                  Category: Deploy
+                  Owner: AWS
+                  Version: 1
+                  Provider: CloudFormation
+                InputArtifacts:
+                  - Name: BuildOutput
+                Configuration:
+                  ChangeSetName: Deploy
+                  ActionMode: CREATE_UPDATE
+                  Capabilities: CAPABILITY_NAMED_IAM
+                  RoleArn: !GetAtt [CloudFormationExecutionRole, Arn]
+                  StackName: !Join ["-", ["Ref":"AWS::StackName", !Ref ECSRespositoryName]]
+                  TemplatePath: BuildOutput::ecs/service.yaml
+                RunOrder: 4
+          - !Ref AWS::NoValue
+        - !If
+          - IsLambdaDeployment
+          - Name: Deploy
+            Actions:
+              - Name: Deploy-with-Lambda
+                ActionTypeId:
+                  Category: Invoke
+                  Owner: AWS
+                  Version: 1
+                  Provider: Lambda
+                Configuration:
+                  FunctionName: !Ref LambdaFunction
+                InputArtifacts:
+                  - Name: BuildOutput
+                RunOrder: 4
+          - !Ref AWS::NoValue
         - !If
           - IsStagingCondition
           - Name: Release
