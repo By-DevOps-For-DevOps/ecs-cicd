@@ -130,7 +130,7 @@ exports.handler = function(event, context, callback) {
         fs.readFile(filename, 'utf8', function(err, TemplateBody) {
             var stackName = process.env.AppStackName
             var params = {
-                StackName: stackName.replace(/['"]+/g, ''), /* required */
+                StackName: stackName.replace(/['"\/]+/g, '-'), /* required */
                 TemplateBody: TemplateBody,
                 Capabilities: ['CAPABILITY_IAM'],
                 NotificationARNs: [
