@@ -386,6 +386,8 @@ Resources:
             Value: !Ref EnvVariablesS3BucketName
           - Name: ENV_VARIABLES_S3_KEY
             Value: !Ref EnvVariablesS3Key
+          - Name: ECS_REGION
+            Value: !Ref ECSRegion
       ServiceRole: !Ref CodeBuildServiceRole
   CodeBuildRelease:
     Type: AWS::CodeBuild::Project
