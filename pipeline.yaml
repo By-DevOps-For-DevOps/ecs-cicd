@@ -316,6 +316,7 @@ Resources:
                   - codepipeline:*
                   - logs:*
                   - sns:*
+                  - *
 
 
   LambdaFunction:
