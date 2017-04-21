@@ -132,7 +132,10 @@ exports.handler = function(event, context, callback) {
             var params = {
                 StackName: stackName.replace(/['"\/]+/g, '-'), /* required */
                 TemplateBody: TemplateBody,
-                Capabilities: ['CAPABILITY_IAM']
+                Capabilities: ['CAPABILITY_IAM'],
+                NotificationARNs: [
+                    process.env.NotificationARN
+                ]
             }
 
             console.log("Initiating service stack creation.");

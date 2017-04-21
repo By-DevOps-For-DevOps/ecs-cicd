@@ -121,6 +121,9 @@ Parameters:
   Email:
     Type: String
     Description: Email Notification for CloudWatch Alarms
+  SNSTopicARN:
+    Type: String
+    Description: SNS Topic ARN for slack update, Can be generated from ngp-notification
 
 Mappings:
   EnviormentTag:
@@ -316,7 +319,7 @@ Resources:
                   - codepipeline:*
                   - logs:*
                   - sns:*
-                  - *
+                  - "*"
 
 
   LambdaFunction:
@@ -331,7 +334,7 @@ Resources:
       Timeout: 300
       Environment:
         Variables:
-          NotificationARN: !GetAtt NotificationStack.Outputs.CFNotifyEventSource
+          NotificationARN: !Ref SNSTopicARN
           Channel: !Ref SlackChannel
           SlackWebHook: !Ref SlackWebHook
           DeployEnvironment: !Ref DeployEnvironment
@@ -533,17 +536,6 @@ Resources:
                   - Name: Release
                 RunOrder: 5
           - !Ref AWS::NoValue
-  NotificationStack:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      Parameters:
-        Bucket: !Ref S3BucketName
-        Channel: !Ref SlackChannel
-        SlackWebHook: !Ref SlackWebHook
-        DeployEnvironment: !Ref DeployEnvironment
-        EnvironmentName: !Join ["-", [!Ref InfrastructureTagName, !FindInMap [EnviormentTag, !Ref DeployEnvironment, env]]]
-      TemplateURL: !Sub https://s3.amazonaws.com/${S3BucketName}/notification.yaml
-
 Outputs:
   PipelineUrl:
     Value: !Sub https://console.aws.amazon.com/codepipeline/home?region=${AWS::Region}#/view/${Pipeline}
