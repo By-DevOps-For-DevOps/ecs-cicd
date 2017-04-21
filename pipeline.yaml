@@ -22,17 +22,19 @@ Metadata:
           default: "EC2 Container Service"
         Parameters:
           - ECSRespositoryName
+          - ECSRegion
       - Label:
           default: "ECS Production Parameters"
         Parameters:
           - SourceECSAWSAccountId
           - SourceECSRegion
-          - SourceTag
       - Label:
           default: "Release Details"
         Parameters:
-          - ReleaseVersion
+          - ReleasePlan
           - DeployEnvironment
+          - ReleaseManagerGitEmail
+          - ReleaseManagerGitUsername
       - Label:
           default: "Notifications"
         Parameters:
@@ -40,6 +42,12 @@ Metadata:
           - SlackWebHook
           - Email
 Parameters:
+  DeploymentType:
+    Description: Choose between deployment with Lambda or Cloudformation. Use Lambda in regions that lack codebuild.
+    Type: String
+    AllowedValues:
+      - lambda
+      - cloudformation
   PipelineName:
     Description: A name for pipeline
     Type: String
@@ -65,15 +73,24 @@ Parameters:
   ECSRespositoryName:
     Type: String
     Description: ECS Respository Name (If URI is xxx.dkr.ecr.us-east-1.amazonaws.com/nginx, then nginx)
+  ECSRegion:
+    Type: String
+    Description: Region containing the ECS Cluster.
+  ReleasePlan:
+    Type: String
+    Description: (Staging Only) Release version (Eg. 1.0.0) Plan for this Staging Pipeline (This should be updated after each release)
+  ReleaseManagerGitUsername:
+    Type: String
+    Description: (Staging Only)Github Username of the Release Manager
+  ReleaseManagerGitEmail:
+    Type: String
+    Description: (Staging Only)Github Email of the Release Manager
   SourceECSAWSAccountId:
     Type: String
     Description: (Production Only) AWS Account Id of the Staging ECS Cluster
   SourceECSRegion:
     Type: String
     Description: (Production Only) Region containing the Staging ECS Cluster
-  SourceTag:
-    Type: String
-    Description: (Production Only) Tag of the Staging ECR Image to be deployed
   S3BucketName:
     Default: S3_BUCKET_NAME
     Type: String
@@ -84,9 +101,6 @@ Parameters:
   EnvVariablesS3Key:
     Type: String
     Description: S3 file path which contains App specific Environment variables
-  ReleaseVersion:
-    Type: String
-    Description: Application version to be released/ FeatureId incase of feature CodePipeline. This will be appended to the docker image tag.
   DeployEnvironment:
     Type: String
     Description: Specify the environment
@@ -132,7 +146,11 @@ Conditions:
   IsHotfixCondition: !Equals [ !Ref DeployEnvironment, hotfix ]
   IsDevelopmentCondition: !Equals [ !Ref DeployEnvironment, development ]
   IsFeatureCondition: !Equals [ !Ref DeployEnvironment, feature ]
-  IsEnvVariablesS3BucketEmpty: !Equals [ !Ref EnvVariablesS3BucketName, '' ]
+
+  IsEnvVariablesS3BucketEmpty: !Equals [ !Ref EnvVariablesS3BucketName, '' ]  
+  
+  IsLambdaDeployment: !Equals [ !Ref DeploymentType, lambda ]
+  IsCfnDeployment: !Equals [ !Ref DeploymentType, cloudformation ]
 
 Resources:
   CloudFormationExecutionRole:
@@ -261,6 +279,65 @@ Resources:
   ArtifactBucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
+  
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub lambda-${TagName}
+      Path: /
+      AssumeRolePolicyDocument: |
+        {
+            "Statement": [{
+                "Effect": "Allow",
+                "Principal": { "Service": [ "lambda.amazonaws.com" ]},
+                "Action": [ "sts:AssumeRole" ]
+            }]
+        }
+      Policies:
+        - PolicyName: root
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - s3:*
+                  - autoscaling:Describe*
+                  - autoscaling:UpdateAutoScalingGroup
+                  - cloudformation:CreateStack
+                  - cloudformation:DeleteStack
+                  - cloudformation:DescribeStack*
+                  - cloudformation:UpdateStack
+                  - cloudwatch:GetMetricStatistics
+                  - ec2:Describe*
+                  - elasticloadbalancing:*
+                  - ecs:*
+                  - iam:*
+                  - codepipeline:*
+                  - logs:*
+                  - sns:*
+
+
+  LambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Ref S3BucketName
+        S3Key: lambdafunction.zip
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: nodejs4.3
+      Timeout: 300
+      Environment:
+        Variables:
+          NotificationARN: !GetAtt NotificationStack.Outputs.CFNotifyEventSource
+          Channel: !Ref SlackChannel
+          SlackWebHook: !Ref SlackWebHook
+          DeployEnvironment: !Ref DeployEnvironment
+          EnvironmentName: !Join ["-", [!Ref InfrastructureTagName, !FindInMap [EnviormentTag, !Ref DeployEnvironment, env]]]
+          ECSRegion: !Ref ECSRegion
+          PipelineRegion: !Ref AWS::Region
+          AppStackName: !Join ["-", ["Ref":"AWS::StackName", !Ref ECSRespositoryName]]
 
   CodeBuildProject:
     Type: AWS::CodeBuild::Project
@@ -286,20 +363,22 @@ Resources:
             Value: !Ref SourceECSAWSAccountId
           - Name: SOURCE_AWS_REGION
             Value: !Ref SourceECSRegion
-          - Name: SOURCE_TAG
-            Value: !Ref SourceTag
           - Name: GITHUB_TOKEN
             Value: !Ref GitHubToken
-          - Name: RELEASE_VERSION
-            Value: !Ref ReleaseVersion
           - Name: DEPLOY_ENVIRONMENT
             Value: !Ref DeployEnvironment
           - Name: TAG_NAME
             Value: !Ref TagName
+          - Name: GITHUB_REPO
+            Value: !Ref GitHubRepo
+          - Name: GITHUB_USER
+            Value: !Ref GitHubUser
           - Name: BUILD_SCOPE
             Value: !FindInMap [EnviormentTag, !Ref DeployEnvironment, value]
           - Name: EMAIL
             Value: !Ref Email
+          - Name: RELEASE_PLAN
+            Value: !Ref ReleasePlan
           - Name: ENVIRONMENT_NAME
             Value:
               !Join ["-", [!Ref InfrastructureTagName, !FindInMap [EnviormentTag, !Ref DeployEnvironment, env]]]
@@ -308,7 +387,35 @@ Resources:
           - Name: ENV_VARIABLES_S3_KEY
             Value: !Ref EnvVariablesS3Key
       ServiceRole: !Ref CodeBuildServiceRole
-
+  CodeBuildRelease:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Artifacts:
+        Location: !Ref ArtifactBucket
+        Type: "S3"
+      Source:
+        Location: !Sub ${ArtifactBucket}/source.zip
+        Type: "GITHUB"
+      Environment:
+        ComputeType: "BUILD_GENERAL1_LARGE"
+        Image: "aws/codebuild/ubuntu-base:14.04"
+        Type: "LINUX_CONTAINER"
+        EnvironmentVariables:
+          - Name: GITHUB_TOKEN
+            Value: !Ref GitHubToken
+          - Name: GITHUB_REPO
+            Value: !Ref GitHubRepo
+          - Name: GITHUB_USER
+            Value: !Ref GitHubUser
+          - Name: DEPLOY_ENVIRONMENT
+            Value: 'release'
+          - Name: RELEASE_PLAN
+            Value: !Ref ReleasePlan
+          - Name: GITHUB_USERNAME
+            Value: !Ref ReleaseManagerGitUsername
+          - Name: GITHUB_EMAIL
+            Value: !Ref ReleaseManagerGitEmail
+      ServiceRole: !Ref CodeBuildServiceRole
   Pipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
@@ -359,24 +466,70 @@ Resources:
               OutputArtifacts:
                 - Name: BuildOutput
               RunOrder: 3
-        - Name: Deploy
-          Actions:
-            - Name: Deploy
-              ActionTypeId:
-                Category: Deploy
-                Owner: AWS
-                Version: 1
-                Provider: CloudFormation
-              InputArtifacts:
-                - Name: BuildOutput
-              Configuration:
-                ChangeSetName: Deploy
-                ActionMode: CREATE_UPDATE
-                Capabilities: CAPABILITY_NAMED_IAM
-                RoleArn: !GetAtt [CloudFormationExecutionRole, Arn]
-                StackName: !Join ["-", ["Ref":"AWS::StackName", !Ref ECSRespositoryName]]
-                TemplatePath: BuildOutput::ecs/service.yaml
-              RunOrder: 4
+        - !If
+          - IsCfnDeployment
+          - Name: Deploy
+            Actions:
+              - Name: Deploy
+                ActionTypeId:
+                  Category: Deploy
+                  Owner: AWS
+                  Version: 1
+                  Provider: CloudFormation
+                InputArtifacts:
+                  - Name: BuildOutput
+                Configuration:
+                  ChangeSetName: Deploy
+                  ActionMode: CREATE_UPDATE
+                  Capabilities: CAPABILITY_NAMED_IAM
+                  RoleArn: !GetAtt [CloudFormationExecutionRole, Arn]
+                  StackName: !Join ["-", ["Ref":"AWS::StackName", !Ref ECSRespositoryName]]
+                  TemplatePath: BuildOutput::ecs/service.yaml
+                RunOrder: 4
+          - !Ref AWS::NoValue
+        - !If
+          - IsLambdaDeployment
+          - Name: Deploy
+            Actions:
+              - Name: Deploy-with-Lambda
+                ActionTypeId:
+                  Category: Invoke
+                  Owner: AWS
+                  Version: 1
+                  Provider: Lambda
+                Configuration:
+                  FunctionName: !Ref LambdaFunction
+                InputArtifacts:
+                  - Name: BuildOutput
+                RunOrder: 4
+          - !Ref AWS::NoValue
+        - !If
+          - IsStagingCondition
+          - Name: Release
+            Actions:
+              - Name: Approve-Release
+                ActionTypeId:
+                  Category: Approval
+                  Owner: AWS
+                  Provider: Manual
+                  Version: '1'
+                Configuration:
+                  CustomData: 'Are you ready to release to Production?'
+                RunOrder: 4
+              - Name: Release
+                ActionTypeId:
+                  Category: Build
+                  Owner: AWS
+                  Version: 1
+                  Provider: CodeBuild
+                Configuration:
+                  ProjectName: !Ref CodeBuildRelease
+                InputArtifacts:
+                  - Name: BuildOutput
+                OutputArtifacts:
+                  - Name: Release
+                RunOrder: 5
+          - !Ref AWS::NoValue
   NotificationStack:
     Type: AWS::CloudFormation::Stack
     Properties:
