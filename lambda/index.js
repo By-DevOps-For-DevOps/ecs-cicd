@@ -1,7 +1,6 @@
 'use strict';
 //Configuring AWS
 var AWS = require('aws-sdk');
-var YAML = require('yamljs');
 var fs = require('fs');
 var https = require('https');
 var util = require('util');
@@ -33,46 +32,6 @@ exports.handler = function(event, context, callback) {
     AWS.config.update({region: process.env.ECSRegion});
     var cloudformation = new AWS.CloudFormation();
 
-    // slack configurations
-    var postData = {
-        "channel": process.env.Channel,
-        "username": process.env.DeployEnvironment.toUpperCase() +" :: " + process.env.EnvironmentName,
-        "text": "**",
-        "icon_emoji": ":cloud:"
-    };
-
-    var options = {
-        method: 'POST',
-        hostname: 'hooks.slack.com',
-        port: 443,
-        path: process.env.SlackWebHook
-    };
-
-
-    var sentSlackNotification = function (severity, title, message) {
-
-        postData.text = "*"+ title + "*"
-        postData.attachments = [
-            {
-                "color": severity,
-                "text": message
-            }
-        ];
-
-        var req = https.request(options, function(res) {
-            res.setEncoding('utf8');
-            res.on('data', function (chunk) {
-                context.done(null);
-            });
-        });
-
-        req.on('error', function(e) {
-            console.log('problem with request: ' + e.message);
-        });
-
-        req.write(util.format("%j", postData));
-        req.end();
-    }
 
 
     /**
@@ -123,8 +82,6 @@ exports.handler = function(event, context, callback) {
      * Function to update service definition
      */
     var updateServiceDefinition = function () {
-        // var serviceDefinition = YAML.load('/tmp/artifacts/ecs/service.yaml');
-        // console.log("service.yaml: " + JSON.stringify(serviceDefinition));
 
         var filename = '/tmp/artifacts/ecs/service.yaml';
         fs.readFile(filename, 'utf8', function(err, TemplateBody) {
@@ -147,27 +104,22 @@ exports.handler = function(event, context, callback) {
                             if (err) {
                                 if ( err.message == "No updates are to be performed.") {
                                     putJobSuccess(data);
-                                    sentSlackNotification("good", "Deployment completed!", "No updates are to be performed.");
                                 } else {
                                     console.log("Updation failed: " + JSON.stringify(err));
                                     putJobFailure(err);
-                                    sentSlackNotification("danger", "Deployment failed!", err.message);
                                 }
 
                             } else {
                                 console.log("Updation started successfully: " + JSON.stringify(data));
                                 putJobSuccess(data);
-                                sentSlackNotification("good", "Deployment started successfully!", "Deployment started successfully.");
                             }
                         });
                     } else {
                         putJobFailure(err);
-                        sentSlackNotification("danger", "Deployment failed!", err.message);
                     }
                 } else {
                     console.log("Creation started successfully: "+JSON.stringify(data));
                     putJobSuccess(data);
-                    sentSlackNotification("good", "Deployment started successfully!", "Deployment started successfully.");
                 }
             });
         });
