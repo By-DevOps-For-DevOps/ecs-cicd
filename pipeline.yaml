@@ -38,8 +38,6 @@ Metadata:
       - Label:
           default: "Notifications"
         Parameters:
-          - SlackChannel
-          - SlackWebHook
           - Email
 Parameters:
   DeploymentType:
@@ -111,13 +109,6 @@ Parameters:
       - development
       - feature
     ConstraintDescription: Must specify production, staging, hotfix, development or feature.
-  SlackChannel:
-    Type: String
-    Default: "#"
-    Description: Slack channel to be notified. (start with '#')
-  SlackWebHook:
-    Type: String
-    Description: Slack incoming webhook
   Email:
     Type: String
     Description: Email Notification for CloudWatch Alarms
@@ -149,9 +140,7 @@ Conditions:
   IsHotfixCondition: !Equals [ !Ref DeployEnvironment, hotfix ]
   IsDevelopmentCondition: !Equals [ !Ref DeployEnvironment, development ]
   IsFeatureCondition: !Equals [ !Ref DeployEnvironment, feature ]
-
-  IsEnvVariablesS3BucketEmpty: !Equals [ !Ref EnvVariablesS3BucketName, '' ]  
-  
+  IsEnvVariablesS3BucketEmpty: !Equals [ !Ref EnvVariablesS3BucketName, '' ]
   IsLambdaDeployment: !Equals [ !Ref DeploymentType, lambda ]
   IsCfnDeployment: !Equals [ !Ref DeploymentType, cloudformation ]
 
@@ -335,8 +324,6 @@ Resources:
       Environment:
         Variables:
           NotificationARN: !Ref SNSTopicARN
-          Channel: !Ref SlackChannel
-          SlackWebHook: !Ref SlackWebHook
           DeployEnvironment: !Ref DeployEnvironment
           EnvironmentName: !Join ["-", [!Ref InfrastructureTagName, !FindInMap [EnviormentTag, !Ref DeployEnvironment, env]]]
           ECSRegion: !Ref ECSRegion
