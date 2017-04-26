@@ -61,3 +61,9 @@ Eg:
 ```
 
 (Example file)[./code_build_env.yaml]
+### Cross Account Deployment with Automated Release
+The `ngp-app-codepipeline` can be configured to run staging and production pipeline in different accounts.
+Using this workflow, release can be triggered from the Staging pipeline and Production 
+pipeline with pull the ECR image from Staging AWS Account.
+
+![Preview](cross-account-deployment.png)
