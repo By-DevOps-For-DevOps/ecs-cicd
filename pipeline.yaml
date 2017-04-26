@@ -41,7 +41,7 @@ Metadata:
           - Email
 Parameters:
   DeploymentType:
-    Description: Choose between deployment with Lambda or Cloudformation. Use Lambda in regions that lack codebuild.
+    Description: Choose between deployment with Lambda or Cloudformation. Use Lambda in regions where CodeBuild is not present.
     Type: String
     AllowedValues:
       - lambda
@@ -114,7 +114,7 @@ Parameters:
     Description: Email Notification for CloudWatch Alarms
   SNSTopicARN:
     Type: String
-    Description: SNS Topic ARN for slack update, Can be generated from ngp-notification
+    Description: (Optional) SNS Topic ARN for Slack notification. See prerequsite 6.
 
 Mappings:
   EnviormentTag:
