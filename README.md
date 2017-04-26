@@ -3,9 +3,13 @@
 ### Prerequisites
 1. Create an S3 bucket to store the Lambda function for slack notifications. The bucket should be in same region as your codepipeline.
 2. Create an S3 bucket to store the App specific environment variable if any. The bucket should be in same region as your codepipeline.
+[App specific environment variables](https://github.com/microservices-today/ngp-app-codepipeline#app-specific-environment-variables) 
+section explains on how environment variables needs to be added to the S3 Bucket.
 3. Create an ECS repository in the same region as your ECS Cluster.
 4. The application repository must contain `ecs/service.yaml` and `buildspec.yaml`.
 5. GitHub Token with `admin:repo_hook` and `repo` scopes.
+6. (Optional) Notifications can be enabled by running [ngp-notification](https://github.com/microservices-today/ngp-notification.git)
+ first and providing the SNS Topic ARN from the CloudFormation output as `SNSTopicARN` parameter value.
 
 ### Steps to install.
 1. Clone the repo  
