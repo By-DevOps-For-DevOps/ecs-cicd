@@ -24,6 +24,10 @@
     "ParameterValue": "ngp-nginx"
   },
   {
+    "ParameterKey": "ECSRegion",
+    "ParameterValue": "us-east-1"
+  },
+  {
     "ParameterKey": "SourceECSAWSAccountId",
     "ParameterValue": ""
   },
@@ -32,24 +36,8 @@
     "ParameterValue": ""
   },
   {
-    "ParameterKey": "SourceTag",
-    "ParameterValue": ""
-  },
-  {
-    "ParameterKey": "ReleaseVersion",
-    "ParameterValue": "1.0.0"
-  },
-  {
     "ParameterKey": "DeployEnvironment",
     "ParameterValue": "development"
-  },
-  {
-    "ParameterKey": "SlackChannel",
-    "ParameterValue": "#"
-  },
-  {
-    "ParameterKey": "SlackWebHook",
-    "ParameterValue": "https://hooks.slack.com/xxxxxxxxxxxxxxxxxxxxxxxxxxx"
   },
   {
     "ParameterKey": "InfrastructureTagName",
@@ -68,11 +56,27 @@
     "ParameterValue": ""
   },
   {
-    "ParameterKey": "EnvVariablesS3BucketName",
+    "ParameterKey": "DeploymentType",
+    "ParameterValue": "lambda"
+  },
+  {
+    "ParameterKey": "EnvVariablesS3Path",
     "ParameterValue": ""
   },
   {
-    "ParameterKey": "EnvVariablesS3Key",
+    "ParameterKey": "SNSTopicARN",
     "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "ReleaseManagerGitEmail",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "ReleaseManagerGitUsername",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "ReleasePlan",
+    "ParameterValue": "1.0.0"
   }
 ]
