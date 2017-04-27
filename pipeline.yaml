@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
 Description: >
-  This template  builds an AWS CodePipeline pipeline that implements a continuous delivery release
+  This template builds an AWS CodePipeline pipeline that implements a continuous delivery release
   process for an app.
 
 Metadata:
