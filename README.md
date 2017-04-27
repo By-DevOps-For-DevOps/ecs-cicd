@@ -31,10 +31,6 @@ In order to pull staging images to production account we need to assign producti
 4. Save the policy.
 ![Preview](permission.png)
 
-[comment]: <> (
-### Architecture 
-![--Preview](CICDPipeline.png)
-
 ### CodePipeline Stages
 ##### Source Stage
 AWS CodePipeline uses GitHub repository as the source stage for your code.
@@ -52,7 +48,6 @@ Service with environment specific information.
 AWS CloudFormation creates/updates the CloudFormation stack to create/update the 
 application Service in ECS.
 
-
 ### App specific environment variables
 App specific environment variables can be passed to CodePipeline by specifying the S3 Bucket and filename which contains the environment variables.
 - First line should be a newline
@@ -67,6 +62,10 @@ Eg:
 ```
 
 (Example file)[./code_build_env.yaml]
+
+### Architecture 
+![--Preview](CICDPipeline.png)
+
 ### Cross Account Deployment with Automated Release
 The `ngp-app-codepipeline` can be configured to run staging and production pipeline in different accounts.
 Using this workflow, release can be triggered from the Staging pipeline and Production 
