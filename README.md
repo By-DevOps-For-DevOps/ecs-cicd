@@ -31,8 +31,9 @@ In order to pull staging images to production account we need to assign producti
 4. Save the policy.
 ![Preview](permission.png)
 
-### Architecture
-![Preview](CICDPipeline.png)
+[comment]: <> (
+### Architecture 
+![--Preview](CICDPipeline.png)
 
 ### CodePipeline Stages
 ##### Source Stage
@@ -72,3 +73,6 @@ Using this workflow, release can be triggered from the Staging pipeline and Prod
 pipeline with pull the ECR image from Staging AWS Account.
 
 ![Preview](cross-account-deployment.png)
+
+### Environments are based on git workflow
+![--Preview](git-workflow.png)
