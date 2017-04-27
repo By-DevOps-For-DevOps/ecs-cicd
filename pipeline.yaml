@@ -41,7 +41,7 @@ Metadata:
           - Email
 Parameters:
   DeploymentType:
-    Description: Choose between deployment with Lambda or Cloudformation. Use Lambda in regions that lack codebuild.
+    Description: Choose between deployment with Lambda or Cloudformation. Use Lambda in regions where CodeBuild is not present.
     Type: String
     AllowedValues:
       - lambda
@@ -93,12 +93,9 @@ Parameters:
     Default: S3_BUCKET_NAME
     Type: String
     Description: S3 Bucket which contains the Lambda function
-  EnvVariablesS3BucketName:
+  EnvVariablesS3Path:
     Type: String
-    Description: S3 Bucket which contains App specific Environment variables
-  EnvVariablesS3Key:
-    Type: String
-    Description: S3 file path which contains App specific Environment variables
+    Description: S3 file path which contains App specific Environment variables (eg. BucketName/FileName.yaml )
   DeployEnvironment:
     Type: String
     Description: Specify the environment
@@ -114,7 +111,7 @@ Parameters:
     Description: Email Notification for CloudWatch Alarms
   SNSTopicARN:
     Type: String
-    Description: SNS Topic ARN for slack update, Can be generated from ngp-notification
+    Description: (Optional) SNS Topic ARN for Slack notification. See prerequsite 6.
 
 Mappings:
   EnviormentTag:
@@ -140,7 +137,7 @@ Conditions:
   IsHotfixCondition: !Equals [ !Ref DeployEnvironment, hotfix ]
   IsDevelopmentCondition: !Equals [ !Ref DeployEnvironment, development ]
   IsFeatureCondition: !Equals [ !Ref DeployEnvironment, feature ]
-  IsEnvVariablesS3BucketEmpty: !Equals [ !Ref EnvVariablesS3BucketName, '' ]
+  IsEnvVariablesS3PathEmpty: !Equals [ !Ref EnvVariablesS3Path, '' ]
   IsLambdaDeployment: !Equals [ !Ref DeploymentType, lambda ]
   IsCfnDeployment: !Equals [ !Ref DeploymentType, cloudformation ]
 
@@ -209,10 +206,10 @@ Resources:
                   - s3:PutObject
                   - s3:GetObjectVersion
               - !If
-                - IsEnvVariablesS3BucketEmpty
+                - IsEnvVariablesS3PathEmpty
                 - !Ref AWS::NoValue
                 - Resource:
-                    - !Sub arn:aws:s3:::${EnvVariablesS3BucketName}/*
+                    - !Sub arn:aws:s3:::${EnvVariablesS3Path}
                   Effect: Allow
                   Action:
                     - s3:PutObject
@@ -248,10 +245,10 @@ Resources:
                   - s3:GetObjectVersion
                   - s3:GetBucketVersioning
               - !If
-                - IsEnvVariablesS3BucketEmpty
+                - IsEnvVariablesS3PathEmpty
                 - !Ref AWS::NoValue
                 - Resource:
-                    - !Sub arn:aws:s3:::${EnvVariablesS3BucketName}/*
+                    - !Sub arn:aws:s3:::${EnvVariablesS3Path}
                   Effect: Allow
                   Action:
                     - s3:PutObject
@@ -373,10 +370,8 @@ Resources:
           - Name: ENVIRONMENT_NAME
             Value:
               !Join ["-", [!Ref InfrastructureTagName, !FindInMap [EnviormentTag, !Ref DeployEnvironment, env]]]
-          - Name: ENV_VARIABLES_S3_BUCKET
-            Value: !Ref EnvVariablesS3BucketName
-          - Name: ENV_VARIABLES_S3_KEY
-            Value: !Ref EnvVariablesS3Key
+          - Name: ENV_VARIABLES_S3_PATH
+            Value: !Ref EnvVariablesS3Path
           - Name: ECS_REGION
             Value: !Ref ECSRegion
       ServiceRole: !Ref CodeBuildServiceRole
