@@ -16,7 +16,6 @@ if [[ -z "$AWS_REGION" ]]; then
 fi
 
 cp pipeline.yaml bin/
-sed -i -e "s@ECS_REGION@${AWS_REGION}@g" bin/pipeline.yaml
 sed -i -e "s@S3_BUCKET_NAME@${S3_BUCKET_NAME}@g" bin/pipeline.yaml
 aws s3 cp bin/pipeline.yaml s3://${S3_BUCKET_NAME}/
 rm bin/pipeline.yaml
