@@ -272,7 +272,7 @@ Resources:
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub lambda-${TagName}
+      RoleName: !Sub lambda-${TagName}-${DeployEnvironment}
       Path: /
       AssumeRolePolicyDocument: |
         {
