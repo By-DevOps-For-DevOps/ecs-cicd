@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
 Description: >
-  This template  builds an AWS CodePipeline pipeline that implements a continuous delivery release
+  This template builds an AWS CodePipeline pipeline that implements a continuous delivery release
   process for an app.
 
 Metadata:
@@ -272,7 +272,7 @@ Resources:
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub lambda-${TagName}
+      RoleName: !Sub lambda-${TagName}-${DeployEnvironment}
       Path: /
       AssumeRolePolicyDocument: |
         {
@@ -471,7 +471,7 @@ Resources:
                   ActionMode: CREATE_UPDATE
                   Capabilities: CAPABILITY_NAMED_IAM
                   RoleArn: !GetAtt [CloudFormationExecutionRole, Arn]
-                  StackName: !Join ["-", ["Ref":"AWS::StackName", !Ref ECSRespositoryName]]
+                  StackName: !Join ["-", ["Ref":"AWS::StackName", !Ref GitHubRepo]]
                   TemplatePath: BuildOutput::ecs/service.yaml
                 RunOrder: 4
           - !Ref AWS::NoValue
