@@ -471,7 +471,7 @@ Resources:
                   ActionMode: CREATE_UPDATE
                   Capabilities: CAPABILITY_NAMED_IAM
                   RoleArn: !GetAtt [CloudFormationExecutionRole, Arn]
-                  StackName: !Join ["-", ["Ref":"AWS::StackName", !Ref GitHubRepo]]
+                  StackName: !Join ["-", ["Ref":"AWS::StackName", !Ref ECSRespositoryName]]
                   TemplatePath: BuildOutput::ecs/service.yaml
                 RunOrder: 4
           - !Ref AWS::NoValue
