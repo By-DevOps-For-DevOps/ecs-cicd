@@ -19,7 +19,7 @@ section explains on how environment variables needs to be added to the S3 Bucket
 2. Export AWS credentials     
    `export AWS_ACCESS_KEY_ID="accesskey"`   
    `export AWS_SECRET_ACCESS_KEY="secretkey"`     
-   `export AWS_DEFAULT_REGION="ap-northeast-1"`   
+   `export AWS_DEFAULT_REGION="ap-southeast-1"`
 3. Run `bash bin/configure.sh`.
 4. Open the link at the end of the script to continue the installation.
 
