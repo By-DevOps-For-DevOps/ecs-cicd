@@ -431,16 +431,17 @@ Resources:
               RunOrder: 1
         - Name: Build
           Actions:
-            - !If
-              - IsProductionCondition
-              - Name: ManualApproval
-                ActionTypeId:
-                  Category: Approval
-                  Owner: AWS
-                  Version: 1
-                  Provider: Manual
-                RunOrder: 2
-              - !Ref AWS::NoValue
+# Disable Manual Approval for Production
+#            - !If
+#              - IsProductionCondition
+#              - Name: ManualApproval
+#                ActionTypeId:
+#                  Category: Approval
+#                  Owner: AWS
+#                  Version: 1
+#                  Provider: Manual
+#                RunOrder: 2
+#              - !Ref AWS::NoValue
             - Name: Build
               ActionTypeId:
                 Category: Build
