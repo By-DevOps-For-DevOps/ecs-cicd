@@ -241,7 +241,7 @@ Resources:
   ArtifactBucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
-  
+
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -303,6 +303,7 @@ Resources:
   CodeBuildProject:
     Type: AWS::CodeBuild::Project
     Properties:
+      Name: !Join [ '-', [ 'CodeBuildProject', !Ref 'AWS::StackName' ] ]
       Artifacts:
         Location: !Ref ArtifactBucket
         Type: "S3"
@@ -349,6 +350,7 @@ Resources:
   CodeBuildRelease:
     Type: AWS::CodeBuild::Project
     Properties:
+      Name: !Join [ '-', [ 'CodeBuildRelease', !Ref 'AWS::StackName' ] ]
       Artifacts:
         Location: !Ref ArtifactBucket
         Type: "S3"
