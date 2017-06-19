@@ -24,6 +24,7 @@ Metadata:
           - ECSRespositoryName
           - ECSRegion
           - CertificateArn
+          - LogstashUrl
       - Label:
           default: "ECS Production Parameters"
         Parameters:
@@ -78,6 +79,9 @@ Parameters:
   CertificateArn:
     Type: String
     Description: ACM Certificate ARN.
+  LogstashUrl:
+    Type: String
+    Description: Logstash Url
   ReleasePlan:
     Type: String
     Description: (Staging Only) Release version (Eg. 1.0.0) Plan for this Staging Pipeline (This should be updated after each release)
@@ -352,6 +356,8 @@ Resources:
             Value: !Ref ECSRegion
           - Name: CERTIFICATE_ARN
             Value: !Ref CertificateArn
+          - Name: LOGSTASH_URL
+            Value: !Ref LogstashUrl
       ServiceRole: !Ref CodeBuildServiceRole
   CodeBuildRelease:
     Type: AWS::CodeBuild::Project
