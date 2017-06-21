@@ -23,8 +23,19 @@ Metadata:
         Parameters:
           - ECSRespositoryName
           - ECSRegion
+          - DesiredCount
+      - Label:
+          default: "Certificate Manager"
+        Parameters:
           - CertificateArn
+      - Label:
+          default: "Logstash"
+        Parameters:
           - LogstashUrl
+      - Label:
+          default: "Route53"
+        Parameters:
+          - HostedZone
       - Label:
           default: "ECS Production Parameters"
         Parameters:
@@ -82,6 +93,13 @@ Parameters:
   LogstashUrl:
     Type: String
     Description: Logstash Url
+  HostedZone:
+    Type: String
+    Description: Hosted zone for Route53 entry.
+  DesiredCount:
+    Type: Number
+    Default: 2
+    Description: ECS Service desired count.
   ReleasePlan:
     Type: String
     Description: (Staging Only) Release version (Eg. 1.0.0) Plan for this Staging Pipeline (This should be updated after each release)
@@ -358,6 +376,10 @@ Resources:
             Value: !Ref CertificateArn
           - Name: LOGSTASH_URL
             Value: !Ref LogstashUrl
+          - Name: HOSTED_ZONE
+            Value: !Ref HostedZone
+          - Name: DESIRED_COUNT
+            Value: !Ref DesiredCount
       ServiceRole: !Ref CodeBuildServiceRole
   CodeBuildRelease:
     Type: AWS::CodeBuild::Project
