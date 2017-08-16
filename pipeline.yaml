@@ -211,13 +211,15 @@ Resources:
                 - "codebuild.amazonaws.com"
             Action:
               - "sts:AssumeRole"
-          -
-            Effect: "Allow"
-            Principal:
-              AWS:
-                - !If [IsProductionCondition, !Sub "arn:aws:iam::${SourceECSAWSAccountId}:root", !Ref "AWS::NoValue"]
-            Action:
-              - "sts:AssumeRole"
+          - !If
+            - IsProductionCondition
+            -
+              Effect: "Allow"
+              Principal:
+                AWS:
+                  - !Sub "arn:aws:iam::${SourceECSAWSAccountId}:root"
+              Action:
+                - "sts:AssumeRole"
 
       Policies:
         - PolicyName: root
