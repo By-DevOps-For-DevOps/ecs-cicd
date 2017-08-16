@@ -127,6 +127,7 @@ Parameters:
     Type: String
     Description: (Production Only) Region containing the Staging ECS Cluster
   S3BucketName:
+    Default: S3_BUCKET_NAME
     Type: String
     Description: S3 Bucket which contains the Lambda function
   DeployEnvironment:
