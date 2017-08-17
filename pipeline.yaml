@@ -39,6 +39,10 @@ Metadata:
         Parameters:
           - HostedZone
       - Label:
+          default: "EFS"
+        Parameters:
+          - SourcePath
+      - Label:
           default: "ECS Production Parameters"
         Parameters:
           - SourceECSAWSAccountId
@@ -99,6 +103,9 @@ Parameters:
   HostedZone:
     Type: String
     Description: Hosted zone for Route53 entry.
+  SourcePath:
+    Type: String
+    Description: (Optional) EFS source path.
   DesiredCount:
     Type: Number
     Default: 2
@@ -211,14 +218,15 @@ Resources:
                 - "codebuild.amazonaws.com"
             Action:
               - "sts:AssumeRole"
-          -
-            Effect: "Allow"
-            Principal:
-              AWS:
-                - !If [IsProductionCondition, !Sub "arn:aws:iam::${SourceECSAWSAccountId}:root", !Ref "AWS::NoValue"]
-            Action:
-              - "sts:AssumeRole"
-
+          - !If
+            - IsProductionCondition
+            - Effect: "Allow"
+              Principal:
+                AWS:
+                  - !Sub arn:aws:iam::${SourceECSAWSAccountId}:root
+                Action:
+                  - "sts:AssumeRole"
+            - !Ref "AWS::NoValue"
       Policies:
         - PolicyName: root
           PolicyDocument:
@@ -390,6 +398,8 @@ Resources:
             Value: !Ref LogstashUrl
           - Name: HOSTED_ZONE
             Value: !Ref HostedZone
+          - Name: EFS_SOURCE_PATH
+            Value: !Ref SourcePath
           - Name: DESIRED_COUNT
             Value: !Ref DesiredCount
           - Name: ECS_CPU_COUNT
