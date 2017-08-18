@@ -224,8 +224,8 @@ Resources:
               Principal:
                 AWS:
                   - !Sub arn:aws:iam::${SourceECSAWSAccountId}:root
-                Action:
-                  - "sts:AssumeRole"
+              Action:
+                - "sts:AssumeRole"
             - !Ref "AWS::NoValue"
       Policies:
         - PolicyName: root
