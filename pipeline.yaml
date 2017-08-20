@@ -39,9 +39,10 @@ Metadata:
         Parameters:
           - HostedZone
       - Label:
-          default: "EFS"
+          default: "Docker Volume Mount"
         Parameters:
           - SourcePath
+          - ContainerMountPath
       - Label:
           default: "ECS Production Parameters"
         Parameters:
@@ -106,6 +107,9 @@ Parameters:
   SourcePath:
     Type: String
     Description: (Optional) EFS source path.
+  ContainerMountPath:
+    Type: String
+    Description: (Optional) Docker container volume mount path. For eg. /app/efs
   DesiredCount:
     Type: Number
     Default: 2
@@ -400,6 +404,8 @@ Resources:
             Value: !Ref HostedZone
           - Name: EFS_SOURCE_PATH
             Value: !Ref SourcePath
+          - Name: CONTAINER_MOUNT_PATH
+            Value: !Ref ContainerMountPath
           - Name: DESIRED_COUNT
             Value: !Ref DesiredCount
           - Name: ECS_CPU_COUNT
