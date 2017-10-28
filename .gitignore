@@ -1,5 +1,3 @@
-
-
 # Mac
 .DS_Store
 
@@ -13,3 +11,7 @@
 lambda/lambdafunction.zip
 lambda/node_modules/
 lambda/config.json
+
+# Security
+*.pem
+.envrc
