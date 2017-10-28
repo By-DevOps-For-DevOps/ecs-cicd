@@ -28,7 +28,7 @@ section explains on how environment variables needs to be added to the S3 Bucket
 1. Run `bash bin/configure.sh`.
 1. Open the link at the end of the script to continue the installation.
 
-###!Important
+### !Important
 
 In order to pull staging images to production account we need to assign production account permissions to staging ECR:
 
