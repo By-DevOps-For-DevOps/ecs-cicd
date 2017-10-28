@@ -93,9 +93,6 @@ Parameters:
     Default: S3_BUCKET_NAME
     Type: String
     Description: S3 Bucket which contains the Lambda function
-  EnvVariablesS3Path:
-    Type: String
-    Description: S3 file path which contains App specific Environment variables (eg. BucketName/FileName.yaml )
   DeployEnvironment:
     Type: String
     Description: Specify the environment
@@ -137,7 +134,6 @@ Conditions:
   IsHotfixCondition: !Equals [ !Ref DeployEnvironment, hotfix ]
   IsDevelopmentCondition: !Equals [ !Ref DeployEnvironment, development ]
   IsFeatureCondition: !Equals [ !Ref DeployEnvironment, feature ]
-  IsEnvVariablesS3PathEmpty: !Equals [ !Ref EnvVariablesS3Path, '' ]
   IsLambdaDeployment: !Equals [ !Ref DeploymentType, lambda ]
   IsCfnDeployment: !Equals [ !Ref DeploymentType, cloudformation ]
 
@@ -205,18 +201,6 @@ Resources:
                   - s3:GetObject
                   - s3:PutObject
                   - s3:GetObjectVersion
-              - !If
-                - IsEnvVariablesS3PathEmpty
-                - !Ref AWS::NoValue
-                - Resource:
-                    - !Sub arn:aws:s3:::${EnvVariablesS3Path}
-                  Effect: Allow
-                  Action:
-                    - s3:PutObject
-                    - s3:GetObject
-                    - s3:GetObjectVersion
-                    - s3:GetBucketVersioning
-
 
   CodePipelineServiceRole:
     Type: AWS::IAM::Role
@@ -244,17 +228,6 @@ Resources:
                   - s3:GetObject
                   - s3:GetObjectVersion
                   - s3:GetBucketVersioning
-              - !If
-                - IsEnvVariablesS3PathEmpty
-                - !Ref AWS::NoValue
-                - Resource:
-                    - !Sub arn:aws:s3:::${EnvVariablesS3Path}
-                  Effect: Allow
-                  Action:
-                    - s3:PutObject
-                    - s3:GetObject
-                    - s3:GetObjectVersion
-                    - s3:GetBucketVersioning
               - Resource: "*"
                 Effect: Allow
                 Action:
@@ -370,8 +343,6 @@ Resources:
           - Name: ENVIRONMENT_NAME
             Value:
               !Join ["-", [!Ref InfrastructureTagName, !FindInMap [EnviormentTag, !Ref DeployEnvironment, env]]]
-          - Name: ENV_VARIABLES_S3_PATH
-            Value: !Ref EnvVariablesS3Path
           - Name: ECS_REGION
             Value: !Ref ECSRegion
       ServiceRole: !Ref CodeBuildServiceRole
