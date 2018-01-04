@@ -60,10 +60,6 @@
     "ParameterValue": "lambda"
   },
   {
-    "ParameterKey": "EnvVariablesS3Path",
-    "ParameterValue": ""
-  },
-  {
     "ParameterKey": "SNSTopicARN",
     "ParameterValue": ""
   },
