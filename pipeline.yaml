@@ -31,10 +31,6 @@ Metadata:
         Parameters:
           - CertificateArn
       - Label:
-          default: "Logstash"
-        Parameters:
-          - LogstashUrl
-      - Label:
           default: "Route53"
         Parameters:
           - HostedZone
@@ -97,10 +93,6 @@ Parameters:
   CertificateArn:
     Type: String
     Description: ACM Certificate ARN.
-  LogstashUrl:
-    Type: String
-    Description: Logstash Url
-    Default: udp://logstash.imsold.vpc:12200
   HostedZone:
     Type: String
     Description: Hosted zone for Route53 entry.
@@ -398,8 +390,6 @@ Resources:
             Value: !Ref ECSRegion
           - Name: CERTIFICATE_ARN
             Value: !Ref CertificateArn
-          - Name: LOGSTASH_URL
-            Value: !Ref LogstashUrl
           - Name: HOSTED_ZONE
             Value: !Ref HostedZone
           - Name: EFS_SOURCE_PATH
