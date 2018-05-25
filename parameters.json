@@ -74,5 +74,9 @@
   {
     "ParameterKey": "ReleasePlan",
     "ParameterValue": "1.0.0"
+  },
+  {
+    "ParameterKey": "ProductionAWSAccountNumber",
+    "ParameterValue": "71234567890"
   }
 ]

@@ -55,6 +55,7 @@ Metadata:
           - DeployEnvironment
           - ReleaseManagerGitEmail
           - ReleaseManagerGitUsername
+          - ProductionAWSAccountNumber
       - Label:
           default: "Notifications"
         Parameters:
@@ -127,6 +128,9 @@ Parameters:
   ReleaseManagerGitEmail:
     Type: String
     Description: (Staging Only)Github Email of the Release Manager
+  ProductionAWSAccountNumber:
+    Type: String
+    Description: (Staging Only) Production AWS Account Number
   SourceECSAWSAccountId:
     Type: String
     Description: (Production Only) AWS Account Id of the Staging ECS Cluster
@@ -183,6 +187,7 @@ Conditions:
   IsFeatureCondition: !Equals [ !Ref DeployEnvironment, feature ]
   IsLambdaDeployment: !Equals [ !Ref DeploymentType, lambda ]
   IsCfnDeployment: !Equals [ !Ref DeploymentType, cloudformation ]
+  IsProdAWSAccNumDefined: !Not [ !Equals [ !Ref ProductionAWSAccountNumber, "" ] ]
 
 Resources:
   CloudFormationExecutionRole:
@@ -567,6 +572,23 @@ Resources:
     Type: AWS::ECR::Repository
     Properties:
       RepositoryName: !Ref ECSRespositoryName
+      RepositoryPolicyText:
+        !If
+          - IsProdAWSAccNumDefined
+          -
+            Version: "2008-10-17"
+            Statement:
+              -
+                Sid: AllowPull
+                Effect: Allow
+                Principal:
+                  AWS:
+                    - "arn:aws:iam::707433236440:root"
+                Action:
+                  - "ecr:GetDownloadUrlForLayer"
+                  - "ecr:BatchGetImage"
+                  - "ecr:BatchCheckLayerAvailability"
+          - !Ref AWS::NoValue
 Outputs:
   PipelineUrl:
     Value: !Sub https://console.aws.amazon.com/codepipeline/home?region=${AWS::Region}#/view/${Pipeline}
