@@ -583,7 +583,7 @@ Resources:
                 Effect: Allow
                 Principal:
                   AWS:
-                    - "arn:aws:iam::707433236440:root"
+                    - !Sub arn:aws:iam::${ProductionAWSAccountNumber}:root
                 Action:
                   - "ecr:GetDownloadUrlForLayer"
                   - "ecr:BatchGetImage"
