@@ -19,10 +19,30 @@ Metadata:
         Parameters:
           - S3BucketName
       - Label:
+          default: "S3 Bucket for Swagger"
+        Parameters:
+          - S3SwaggerBucketName
+      - Label:
           default: "EC2 Container Service"
         Parameters:
           - ECSRespositoryName
           - ECSRegion
+          - DesiredCount
+          - ECSCPUCount
+          - ECSMemoryReservationCount
+      - Label:
+          default: "Certificate Manager"
+        Parameters:
+          - CertificateArn
+      - Label:
+          default: "Route53"
+        Parameters:
+          - HostedZone
+      - Label:
+          default: "Docker Volume Mount"
+        Parameters:
+          - SourcePath
+          - ContainerMountPath
       - Label:
           default: "ECS Production Parameters"
         Parameters:
@@ -35,6 +55,7 @@ Metadata:
           - DeployEnvironment
           - ReleaseManagerGitEmail
           - ReleaseManagerGitUsername
+          - ProductionAWSAccountNumber
       - Label:
           default: "Notifications"
         Parameters:
@@ -74,6 +95,30 @@ Parameters:
   ECSRegion:
     Type: String
     Description: Region containing the ECS Cluster.
+  CertificateArn:
+    Type: String
+    Description: ACM Certificate ARN.
+  HostedZone:
+    Type: String
+    Description: Hosted zone for Route53 entry.
+  SourcePath:
+    Type: String
+    Description: (Optional) EFS source path.
+  ContainerMountPath:
+    Type: String
+    Description: (Optional) Docker container volume mount path. For eg. /app/efs
+  DesiredCount:
+    Type: Number
+    Default: 2
+    Description: ECS Service desired count.
+  ECSCPUCount:
+    Type: Number
+    Default: 64
+    Description: ECS CPU Count
+  ECSMemoryReservationCount:
+    Type: Number
+    Default: 128
+    Description: ECS Memory Reservation count
   ReleasePlan:
     Type: String
     Description: (Staging Only) Release version (Eg. 1.0.0) Plan for this Staging Pipeline (This should be updated after each release)
@@ -83,6 +128,9 @@ Parameters:
   ReleaseManagerGitEmail:
     Type: String
     Description: (Staging Only)Github Email of the Release Manager
+  ProductionAWSAccountNumber:
+    Type: String
+    Description: (Staging Only) Production AWS Account Number
   SourceECSAWSAccountId:
     Type: String
     Description: (Production Only) AWS Account Id of the Staging ECS Cluster
@@ -93,6 +141,9 @@ Parameters:
     Default: S3_BUCKET_NAME
     Type: String
     Description: S3 Bucket which contains the Lambda function
+  S3SwaggerBucketName:
+    Type: String
+    Description: (Optional) S3 Bucket which contains the Swagger API docs. Leave empty if want to skip the api gateway resource.
   DeployEnvironment:
     Type: String
     Description: Specify the environment
@@ -136,6 +187,7 @@ Conditions:
   IsFeatureCondition: !Equals [ !Ref DeployEnvironment, feature ]
   IsLambdaDeployment: !Equals [ !Ref DeploymentType, lambda ]
   IsCfnDeployment: !Equals [ !Ref DeploymentType, cloudformation ]
+  IsProdAWSAccNumDefined: !Not [ !Equals [ !Ref ProductionAWSAccountNumber, "" ] ]
 
 Resources:
   CloudFormationExecutionRole:
@@ -174,14 +226,15 @@ Resources:
                 - "codebuild.amazonaws.com"
             Action:
               - "sts:AssumeRole"
-          -
-            Effect: "Allow"
-            Principal:
-              AWS:
-                - !If [IsProductionCondition, !Sub "arn:aws:iam::${SourceECSAWSAccountId}:root", !Ref "AWS::NoValue"]
-            Action:
-              - "sts:AssumeRole"
-
+          - !If
+            - IsProductionCondition
+            - Effect: "Allow"
+              Principal:
+                AWS:
+                  - !Sub arn:aws:iam::${SourceECSAWSAccountId}:root
+              Action:
+                - "sts:AssumeRole"
+            - !Ref "AWS::NoValue"
       Policies:
         - PolicyName: root
           PolicyDocument:
@@ -195,12 +248,17 @@ Resources:
                   - logs:PutLogEvents
                   - ecr:GetAuthorizationToken
                   - ecr:*
+                  - ssm:GetParameters
               - Resource: !Sub arn:aws:s3:::${ArtifactBucket}/*
                 Effect: Allow
                 Action:
                   - s3:GetObject
                   - s3:PutObject
                   - s3:GetObjectVersion
+              - Resource: !Sub arn:aws:s3:::${S3SwaggerBucketName}/*
+                Effect: Allow
+                Action:
+                  - s3:PutObject
 
   CodePipelineServiceRole:
     Type: AWS::IAM::Role
@@ -241,7 +299,7 @@ Resources:
   ArtifactBucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
-  
+
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -303,6 +361,7 @@ Resources:
   CodeBuildProject:
     Type: AWS::CodeBuild::Project
     Properties:
+      Name: !Join [ '-', [ 'CodeBuildProject', !Ref 'AWS::StackName' ] ]
       Artifacts:
         Location: !Ref ArtifactBucket
         Type: "S3"
@@ -345,10 +404,29 @@ Resources:
               !Join ["-", [!Ref InfrastructureTagName, !FindInMap [EnviormentTag, !Ref DeployEnvironment, env]]]
           - Name: ECS_REGION
             Value: !Ref ECSRegion
+          - Name: CERTIFICATE_ARN
+            Value: !Ref CertificateArn
+          - Name: HOSTED_ZONE
+            Value: !Ref HostedZone
+          - Name: EFS_SOURCE_PATH
+            Value: !Ref SourcePath
+          - Name: CONTAINER_MOUNT_PATH
+            Value: !Ref ContainerMountPath
+          - Name: DESIRED_COUNT
+            Value: !Ref DesiredCount
+          - Name: ECS_CPU_COUNT
+            Value: !Ref ECSCPUCount
+          - Name: ECS_MEMORY_RESERVATION_COUNT
+            Value: !Ref ECSMemoryReservationCount
+          - Name: S3_APP_BUCKET_NAME
+            Value: !Ref S3BucketName
+          - Name: S3_SWAGGER_BUCKET_NAME
+            Value: !Ref S3SwaggerBucketName
       ServiceRole: !Ref CodeBuildServiceRole
   CodeBuildRelease:
     Type: AWS::CodeBuild::Project
     Properties:
+      Name: !Join [ '-', [ 'CodeBuildRelease', !Ref 'AWS::StackName' ] ]
       Artifacts:
         Location: !Ref ArtifactBucket
         Type: "S3"
@@ -489,6 +567,27 @@ Resources:
                 OutputArtifacts:
                   - Name: Release
                 RunOrder: 5
+          - !Ref AWS::NoValue
+  ECR:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Ref ECSRespositoryName
+      RepositoryPolicyText:
+        !If
+          - IsProdAWSAccNumDefined
+          -
+            Version: "2008-10-17"
+            Statement:
+              -
+                Sid: AllowPull
+                Effect: Allow
+                Principal:
+                  AWS:
+                    - !Sub arn:aws:iam::${ProductionAWSAccountNumber}:root
+                Action:
+                  - "ecr:GetDownloadUrlForLayer"
+                  - "ecr:BatchGetImage"
+                  - "ecr:BatchCheckLayerAvailability"
           - !Ref AWS::NoValue
 Outputs:
   PipelineUrl:
