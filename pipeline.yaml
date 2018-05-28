@@ -19,9 +19,10 @@ Metadata:
         Parameters:
           - S3BucketName
       - Label:
-          default: "S3 Bucket for Swagger"
+          default: "API (Only for API App)"
         Parameters:
           - S3SwaggerBucketName
+          - APIHostname
       - Label:
           default: "EC2 Container Service"
         Parameters:
@@ -143,7 +144,10 @@ Parameters:
     Description: S3 Bucket which contains the Lambda function
   S3SwaggerBucketName:
     Type: String
-    Description: (Optional) S3 Bucket which contains the Swagger API docs. Leave empty if want to skip the api gateway resource.
+    Description: (API App Only) S3 Bucket which contains the Swagger API docs. Leave empty if want to skip the api gateway resource.
+  APIHostname:
+    Type: String
+    Description: (API App Only) API Gateway Hostname
   DeployEnvironment:
     Type: String
     Description: Specify the environment
@@ -422,6 +426,8 @@ Resources:
             Value: !Ref S3BucketName
           - Name: S3_SWAGGER_BUCKET_NAME
             Value: !Ref S3SwaggerBucketName
+          - Name: API_HOSTNAME
+            Value: !Ref APIHostname
       ServiceRole: !Ref CodeBuildServiceRole
   CodeBuildRelease:
     Type: AWS::CodeBuild::Project
