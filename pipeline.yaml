@@ -62,12 +62,6 @@ Metadata:
         Parameters:
           - Email
 Parameters:
-  DeploymentType:
-    Description: Choose between deployment with Lambda or Cloudformation. Use Lambda in regions where CodeBuild is not present.
-    Type: String
-    AllowedValues:
-      - lambda
-      - cloudformation
   PipelineName:
     Description: A name for pipeline
     Type: String
@@ -139,7 +133,7 @@ Parameters:
     Type: String
     Description: (Production Only) Region containing the Staging ECS Cluster
   S3BucketName:
-    Default: S3_BUCKET_NAME
+    Default: ok-ngp-v300-app-stage
     Type: String
     Description: S3 Bucket which contains the Lambda function
   S3SwaggerBucketName:
@@ -189,8 +183,6 @@ Conditions:
   IsHotfixCondition: !Equals [ !Ref DeployEnvironment, hotfix ]
   IsDevelopmentCondition: !Equals [ !Ref DeployEnvironment, development ]
   IsFeatureCondition: !Equals [ !Ref DeployEnvironment, feature ]
-  IsLambdaDeployment: !Equals [ !Ref DeploymentType, lambda ]
-  IsCfnDeployment: !Equals [ !Ref DeploymentType, cloudformation ]
   IsProdAWSAccNumDefined: !Not [ !Equals [ !Ref ProductionAWSAccountNumber, "" ] ]
 
 Resources:
@@ -278,7 +270,7 @@ Resources:
             }]
         }
       Policies:
-        - PolicyName: root
+        - PolicyName: !Sub root-${TagName}-${DeployEnvironment}
           PolicyDocument:
             Version: 2012-10-17
             Statement:
@@ -286,6 +278,7 @@ Resources:
                   - !Sub arn:aws:s3:::${ArtifactBucket}/*
                 Effect: Allow
                 Action:
+                  - s3:CreateBucket
                   - s3:PutObject
                   - s3:GetObject
                   - s3:GetObjectVersion
@@ -304,74 +297,14 @@ Resources:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
 
-  LambdaExecutionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Sub lambda-${TagName}-${DeployEnvironment}
-      Path: /
-      AssumeRolePolicyDocument: |
-        {
-            "Statement": [{
-                "Effect": "Allow",
-                "Principal": { "Service": [ "lambda.amazonaws.com" ]},
-                "Action": [ "sts:AssumeRole" ]
-            }]
-        }
-      Policies:
-        - PolicyName: root
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Resource: "*"
-                Effect: Allow
-                Action:
-                  - s3:*
-                  - autoscaling:Describe*
-                  - autoscaling:UpdateAutoScalingGroup
-                  - cloudformation:CreateStack
-                  - cloudformation:DeleteStack
-                  - cloudformation:DescribeStack*
-                  - cloudformation:UpdateStack
-                  - cloudwatch:GetMetricStatistics
-                  - ec2:Describe*
-                  - elasticloadbalancing:*
-                  - ecs:*
-                  - iam:*
-                  - codepipeline:*
-                  - logs:*
-                  - sns:*
-                  - "*"
-
-
-  LambdaFunction:
-    Type: AWS::Lambda::Function
-    Properties:
-      Code:
-        S3Bucket: !Ref S3BucketName
-        S3Key: lambdafunction.zip
-      Handler: index.handler
-      Role: !GetAtt LambdaExecutionRole.Arn
-      Runtime: nodejs4.3
-      Timeout: 300
-      Environment:
-        Variables:
-          NotificationARN: !Ref SNSTopicARN
-          DeployEnvironment: !Ref DeployEnvironment
-          EnvironmentName: !Join ["-", [!Ref InfrastructureTagName, !FindInMap [EnviormentTag, !Ref DeployEnvironment, env]]]
-          ECSRegion: !Ref ECSRegion
-          PipelineRegion: !Ref AWS::Region
-          AppStackName: !Join ["-", ["Ref":"AWS::StackName", !Ref ECSRespositoryName]]
-
   CodeBuildProject:
     Type: AWS::CodeBuild::Project
     Properties:
       Name: !Join [ '-', [ 'CodeBuildProject', !Ref 'AWS::StackName' ] ]
       Artifacts:
-        Location: !Ref ArtifactBucket
-        Type: "S3"
+        Type: CODEPIPELINE
       Source:
-        Location: !Sub ${ArtifactBucket}/source.zip
-        Type: "GITHUB"
+        Type: CODEPIPELINE
       Environment:
         ComputeType: "BUILD_GENERAL1_LARGE"
         Image: "aws/codebuild/docker:1.12.1"
@@ -434,11 +367,17 @@ Resources:
     Properties:
       Name: !Join [ '-', [ 'CodeBuildRelease', !Ref 'AWS::StackName' ] ]
       Artifacts:
-        Location: !Ref ArtifactBucket
+        Location: !Ref 'ArtifactBucket'
+        Name: 'source.zip'
+        Packaging: ZIP
         Type: "S3"
       Source:
-        Location: !Sub ${ArtifactBucket}/source.zip
-        Type: "GITHUB"
+        Auth:
+          Type: OAUTH
+        Location: https://github.com/onekyat/user-api-v2
+        Type: GITHUB
+      Triggers:
+        Webhook: true
       Environment:
         ComputeType: "BUILD_GENERAL1_LARGE"
         Image: "aws/codebuild/ubuntu-base:14.04"
@@ -486,17 +425,6 @@ Resources:
               RunOrder: 1
         - Name: Build
           Actions:
-# Disable Manual Approval for Production
-#            - !If
-#              - IsProductionCondition
-#              - Name: ManualApproval
-#                ActionTypeId:
-#                  Category: Approval
-#                  Owner: AWS
-#                  Version: 1
-#                  Provider: Manual
-#                RunOrder: 2
-#              - !Ref AWS::NoValue
             - Name: Build
               ActionTypeId:
                 Category: Build
@@ -508,45 +436,26 @@ Resources:
               InputArtifacts:
                 - Name: App
               OutputArtifacts:
-                - Name: BuildOutput
+                - Name: Built
+              RunOrder: 2
+        - Name: Deploy
+          Actions:
+            - Name: Deploy
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Version: 1
+                Provider: CloudFormation
+              InputArtifacts:
+                - Name: Built
+              Configuration:
+                ChangeSetName: Deploy
+                ActionMode: CREATE_UPDATE
+                Capabilities: CAPABILITY_NAMED_IAM
+                RoleArn: !GetAtt [CloudFormationExecutionRole, Arn]
+                StackName: !Join ["-", ["Ref":"AWS::StackName", !Ref ECSRespositoryName]]
+                TemplatePath: Built::ecs/service.yaml
               RunOrder: 3
-        - !If
-          - IsCfnDeployment
-          - Name: Deploy
-            Actions:
-              - Name: Deploy
-                ActionTypeId:
-                  Category: Deploy
-                  Owner: AWS
-                  Version: 1
-                  Provider: CloudFormation
-                InputArtifacts:
-                  - Name: BuildOutput
-                Configuration:
-                  ChangeSetName: Deploy
-                  ActionMode: CREATE_UPDATE
-                  Capabilities: CAPABILITY_NAMED_IAM
-                  RoleArn: !GetAtt [CloudFormationExecutionRole, Arn]
-                  StackName: !Join ["-", ["Ref":"AWS::StackName", !Ref ECSRespositoryName]]
-                  TemplatePath: BuildOutput::ecs/service.yaml
-                RunOrder: 4
-          - !Ref AWS::NoValue
-        - !If
-          - IsLambdaDeployment
-          - Name: Deploy
-            Actions:
-              - Name: Deploy-with-Lambda
-                ActionTypeId:
-                  Category: Invoke
-                  Owner: AWS
-                  Version: 1
-                  Provider: Lambda
-                Configuration:
-                  FunctionName: !Ref LambdaFunction
-                InputArtifacts:
-                  - Name: BuildOutput
-                RunOrder: 4
-          - !Ref AWS::NoValue
         - !If
           - IsStagingCondition
           - Name: Release
@@ -569,10 +478,10 @@ Resources:
                 Configuration:
                   ProjectName: !Ref CodeBuildRelease
                 InputArtifacts:
-                  - Name: BuildOutput
+                  - Name: Built
                 OutputArtifacts:
                   - Name: Release
-                RunOrder: 5
+                RunOrder: 4
           - !Ref AWS::NoValue
   ECR:
     Type: AWS::ECR::Repository
