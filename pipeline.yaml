@@ -245,9 +245,12 @@ Resources:
                   - ecr:GetAuthorizationToken
                   - ecr:*
                   - ssm:GetParameters
-              - Resource: !Sub arn:aws:s3:::${ArtifactBucket}/*
+              - Resource:
+                  - !Sub arn:aws:s3:::${ArtifactBucket}
+                  - !Sub arn:aws:s3:::${ArtifactBucket}/*
                 Effect: Allow
                 Action:
+                  - s3:ListBucket
                   - s3:GetObject
                   - s3:PutObject
                   - s3:GetObjectVersion
@@ -270,10 +273,15 @@ Resources:
             }]
         }
       Policies:
-        - PolicyName: !Sub root-${TagName}-${DeployEnvironment}
+        - PolicyName: root
           PolicyDocument:
             Version: 2012-10-17
             Statement:
+              - Resource:
+                  - !Sub arn:aws:s3:::${ArtifactBucket}
+                Effect: Allow
+                Action:
+                  - s3:ListBucket
               - Resource:
                   - !Sub arn:aws:s3:::${ArtifactBucket}/*
                 Effect: Allow
@@ -292,6 +300,8 @@ Resources:
                   - iam:PassRole
                   - lambda:*
                   - ec2:CreateSecurityGroup
+                  - s3:ListAllMyBuckets
+                  - s3:GetBucketLocation
 
   ArtifactBucket:
     Type: AWS::S3::Bucket
@@ -302,6 +312,7 @@ Resources:
     Properties:
       Name: !Join [ '-', [ 'CodeBuildProject', !Ref 'AWS::StackName' ] ]
       Artifacts:
+        Name: Built
         Type: CODEPIPELINE
       Source:
         Type: CODEPIPELINE
