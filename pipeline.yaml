@@ -279,13 +279,10 @@ Resources:
             Statement:
               - Resource:
                   - !Sub arn:aws:s3:::${ArtifactBucket}
-                Effect: Allow
-                Action:
-                  - s3:ListBucket
-              - Resource:
                   - !Sub arn:aws:s3:::${ArtifactBucket}/*
                 Effect: Allow
                 Action:
+                  - s3:ListBucket
                   - s3:CreateBucket
                   - s3:PutObject
                   - s3:GetObject
@@ -300,8 +297,6 @@ Resources:
                   - iam:PassRole
                   - lambda:*
                   - ec2:CreateSecurityGroup
-                  - s3:ListAllMyBuckets
-                  - s3:GetBucketLocation
 
   ArtifactBucket:
     Type: AWS::S3::Bucket
@@ -378,17 +373,9 @@ Resources:
     Properties:
       Name: !Join [ '-', [ 'CodeBuildRelease', !Ref 'AWS::StackName' ] ]
       Artifacts:
-        Location: !Ref 'ArtifactBucket'
-        Name: 'source.zip'
-        Packaging: ZIP
-        Type: "S3"
+        Type: CODEPIPELINE
       Source:
-        Auth:
-          Type: OAUTH
-        Location: https://github.com/onekyat/user-api-v2
-        Type: GITHUB
-      Triggers:
-        Webhook: true
+        Type: CODEPIPELINE
       Environment:
         ComputeType: "BUILD_GENERAL1_LARGE"
         Image: "aws/codebuild/ubuntu-base:14.04"
