@@ -479,7 +479,7 @@ Resources:
                   - Name: Built
                 OutputArtifacts:
                   - Name: Release
-                RunOrder: 4
+                RunOrder: 5
           - !Ref AWS::NoValue
   ECR:
     Type: AWS::ECR::Repository
