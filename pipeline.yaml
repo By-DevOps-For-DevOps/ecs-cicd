@@ -157,10 +157,10 @@ Parameters:
     Description: Email Notification for CloudWatch Alarms
   SNSTopicARN:
     Type: String
-    Description: (Optional) SNS Topic ARN for Slack notification. See prerequsite 6.
+    Description: (Optional) SNS Topic ARN for Slack notification. See prerequisite 6.
 
 Mappings:
-  EnviormentTag:
+  EnvironmentTag:
     production:
       value: ""
       env: "Prod"
@@ -337,14 +337,14 @@ Resources:
           - Name: GITHUB_USER
             Value: !Ref GitHubUser
           - Name: BUILD_SCOPE
-            Value: !FindInMap [EnviormentTag, !Ref DeployEnvironment, value]
+            Value: !FindInMap [EnvironmentTag, !Ref DeployEnvironment, value]
           - Name: EMAIL
             Value: !Ref Email
           - Name: RELEASE_PLAN
             Value: !Ref ReleasePlan
           - Name: ENVIRONMENT_NAME
             Value:
-              !Join ["-", [!Ref InfrastructureTagName, !FindInMap [EnviormentTag, !Ref DeployEnvironment, env]]]
+              !Join ["-", [!Ref InfrastructureTagName, !FindInMap [EnvironmentTag, !Ref DeployEnvironment, env]]]
           - Name: ECS_REGION
             Value: !Ref ECSRegion
           - Name: CERTIFICATE_ARN
