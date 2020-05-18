@@ -2,11 +2,9 @@
 
 ## Prerequisites
 
-### Create two reusable S3 buckets in the same region as your codepipeline:
+### Create a reusable S3 buckets in the same region as your codepipeline:
 
-1. For your apps template (e.g. `ngp-app-v204`) and store the Lambda function for slack notifications.
-1. For your apps env variables (e.g. `ngp-app-v204-env`). [App specific environment variables](https://github.com/microservices-today/ngp-app-codepipeline#app-specific-environment-variables) 
-section explains on how environment variables needs to be added to the S3 Bucket.
+1. For your apps template (e.g. `ngp-v303-app-stage`) and store the Lambda function for slack notifications.
 
 ### Other steps
 
