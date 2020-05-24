@@ -26,7 +26,7 @@ Metadata:
       - Label:
           default: "EC2 Container Service"
         Parameters:
-          - ECSRespositoryName
+          - ECSRepositoryName
           - ECSRegion
           - DesiredCount
           - ECSCPUCount
@@ -84,7 +84,7 @@ Parameters:
   InfrastructureTagName:
     Type: String
     Description: Tag name specified for infrastructure cloudformation stack.
-  ECSRespositoryName:
+  ECSRepositoryName:
     Type: String
     Description: ECS Respository Name (If URI is xxx.dkr.ecr.us-east-1.amazonaws.com/nginx, then nginx)
   ECSRegion:
@@ -321,7 +321,7 @@ Resources:
           - Name: AWS_REGION
             Value: !Ref AWS::Region
           - Name: ECR_NAME
-            Value: !Ref ECSRespositoryName
+            Value: !Ref ECSRepositoryName
           - Name: SOURCE_AWS_ACCOUNT_ID
             Value: !Ref SourceECSAWSAccountId
           - Name: SOURCE_AWS_REGION
@@ -451,7 +451,7 @@ Resources:
                 ActionMode: CREATE_UPDATE
                 Capabilities: CAPABILITY_NAMED_IAM
                 RoleArn: !GetAtt [CloudFormationExecutionRole, Arn]
-                StackName: !Join ["-", ["Ref":"AWS::StackName", !Ref ECSRespositoryName]]
+                StackName: !Join ["-", ["Ref":"AWS::StackName", !Ref ECSRepositoryName]]
                 TemplatePath: Built::ecs/service.yaml
               RunOrder: 3
         - !If
@@ -484,7 +484,7 @@ Resources:
   ECR:
     Type: AWS::ECR::Repository
     Properties:
-      RepositoryName: !Ref ECSRespositoryName
+      RepositoryName: !Ref ECSRepositoryName
       RepositoryPolicyText:
         !If
           - IsProdAWSAccNumDefined
