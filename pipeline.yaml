@@ -31,10 +31,7 @@ Metadata:
           - DesiredCount
           - ECSCPUCount
           - ECSMemoryReservationCount
-      - Label:
-          default: "Certificate Manager"
-        Parameters:
-          - CertificateArn
+          - ELBListenerPriority
       - Label:
           default: "Route53"
         Parameters:
@@ -77,7 +74,7 @@ Parameters:
     Description: The Github Token which has access to the repository.
   GitHubUser:
     Type: String
-    Description: The Github User/Organisation under which the repository is hosted.
+    Description: The Github User/Organization under which the repository is hosted.
   TagName:
     Type: String
     Description: Tag name for the cloudformation stack
@@ -86,13 +83,10 @@ Parameters:
     Description: Tag name specified for infrastructure cloudformation stack.
   ECSRepositoryName:
     Type: String
-    Description: ECS Respository Name (If URI is xxx.dkr.ecr.us-east-1.amazonaws.com/nginx, then nginx)
+    Description: ECS Repository Name (If URI is xxx.dkr.ecr.us-east-1.amazonaws.com/nginx, then nginx)
   ECSRegion:
     Type: String
     Description: Region containing the ECS Cluster.
-  CertificateArn:
-    Type: String
-    Description: ACM Certificate ARN.
   HostedZone:
     Type: String
     Description: Hosted zone for Route53 entry.
@@ -114,6 +108,12 @@ Parameters:
     Type: Number
     Default: 128
     Description: ECS Memory Reservation count
+  ELBListenerPriority:
+    Type: Number
+    Default: 1
+    MinValue: 1
+    MaxValue: 50000
+    Description: The priority for the routing rule added to the load balancer. This only applies if you have multiple services on single load balancer.
   ReleasePlan:
     Type: String
     Description: (Staging Only) Release version (Eg. 1.0.0) Plan for this Staging Pipeline (This should be updated after each release)
@@ -313,8 +313,9 @@ Resources:
         Type: CODEPIPELINE
       Environment:
         ComputeType: "BUILD_GENERAL1_LARGE"
-        Image: "aws/codebuild/docker:18.09.0"
+        Image: "aws/codebuild/amazonlinux2-x86_64-standard:3.0"
         Type: "LINUX_CONTAINER"
+        PrivilegedMode: true
         EnvironmentVariables:
           - Name: AWS_ACCOUNT_ID
             Value: !Ref AWS::AccountId
@@ -347,8 +348,6 @@ Resources:
               !Join ["-", [!Ref InfrastructureTagName, !FindInMap [EnvironmentTag, !Ref DeployEnvironment, env]]]
           - Name: ECS_REGION
             Value: !Ref ECSRegion
-          - Name: CERTIFICATE_ARN
-            Value: !Ref CertificateArn
           - Name: HOSTED_ZONE
             Value: !Ref HostedZone
           - Name: EFS_SOURCE_PATH
@@ -361,6 +360,8 @@ Resources:
             Value: !Ref ECSCPUCount
           - Name: ECS_MEMORY_RESERVATION_COUNT
             Value: !Ref ECSMemoryReservationCount
+          - Name: ELB_LISTENER_PRIORITY
+            Value: !Ref ELBListenerPriority
           - Name: S3_APP_BUCKET_NAME
             Value: !Ref S3BucketName
           - Name: S3_SWAGGER_BUCKET_NAME
@@ -378,8 +379,9 @@ Resources:
         Type: CODEPIPELINE
       Environment:
         ComputeType: "BUILD_GENERAL1_LARGE"
-        Image: "aws/codebuild/ubuntu-base:14.04"
+        Image: "aws/codebuild/amazonlinux2-x86_64-standard:3.0"
         Type: "LINUX_CONTAINER"
+        PrivilegedMode: true
         EnvironmentVariables:
           - Name: GITHUB_TOKEN
             Value: !Ref GitHubToken
