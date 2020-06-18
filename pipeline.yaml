@@ -102,11 +102,11 @@ Parameters:
     Description: ECS Service desired count.
   ECSCPUCount:
     Type: Number
-    Default: 64
+    Default: 256
     Description: ECS CPU Count
   ECSMemoryReservationCount:
     Type: Number
-    Default: 128
+    Default: 512
     Description: ECS Memory Reservation count
   ELBListenerPriority:
     Type: Number
