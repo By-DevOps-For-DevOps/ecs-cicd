@@ -60,15 +60,15 @@ application Service in ECS.
 ### App specific environment variables
 
 ```bash
-aws ssm put-parameter --name ngp-v301-dev-stag.XXX --value "XXX" --type SecureString
-aws ssm put-parameter --name ngp-v301-dev-stag.YYY --value "YYY" --type SecureString
-aws ssm put-parameter --name ngp-v301-dev-stag.ZZZ --value "ZZZ" --type SecureString
+aws ssm put-parameter --name /v301-Dev/XXX --value "XXX" --type SecureString
+aws ssm put-parameter --name /v304-Dev/YYY --value "YYY" --type SecureString
+aws ssm put-parameter --name /v304-Dev/ZZZ --value "ZZZ" --type SecureString
 ```
 
 Place your parameters keys (only keys, not actual secrets) in `.env.sample`:
 
 ```bash
-➜  ngp-node-server git:(master) ✗ cat .env.sample
+➜  ngp-nodejs git:(master) ✗ cat .env.sample
 XXX=
 ZZZ=
 YYY=
@@ -80,7 +80,7 @@ YYY=
 
 ### Cross Account Deployment with Automated Release
 
-The `ngp-app-codepipeline` can be configured to run staging and production pipeline in different accounts.
+The `ecs-cicd` can be configured to run staging and production pipeline in different accounts.
 Using this workflow, release can be triggered from the Staging pipeline and Production 
 pipeline with pull the ECR image from Staging AWS Account.
 
