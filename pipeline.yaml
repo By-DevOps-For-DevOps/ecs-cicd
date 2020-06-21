@@ -87,6 +87,7 @@ Parameters:
   ECSRegion:
     Type: String
     Description: Region containing the ECS Cluster.
+    Default: ap-southeast-1
   HostedZone:
     Type: String
     Description: Hosted zone for Route53 entry.
@@ -98,7 +99,7 @@ Parameters:
     Description: (Optional) Docker container volume mount path. For eg. /app/efs
   DesiredCount:
     Type: Number
-    Default: 2
+    Default: 1
     Description: ECS Service desired count.
   ECSCPUCount:
     Type: Number
@@ -133,7 +134,7 @@ Parameters:
     Type: String
     Description: (Production Only) Region containing the Staging ECS Cluster
   S3BucketName:
-    Default: ngp-v303-app-stage
+    Default: ngp-v304-app-stage
     Type: String
     Description: S3 Bucket which contains the Lambda function
   S3SwaggerBucketName:

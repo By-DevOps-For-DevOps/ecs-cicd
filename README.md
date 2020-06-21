@@ -4,7 +4,7 @@
 
 ### Create a reusable S3 buckets in the same region as your codepipeline:
 
-1. For your apps template (e.g. `ngp-v303-app-stage`) and store the Lambda function for slack notifications.
+1. For your apps template (e.g. `ngp-v304-app-stage`) and store the Lambda function for slack notifications.
 
 ### Other steps
 
@@ -16,8 +16,8 @@
 ### Steps to install
 
 1. Clone the repo
-   `git clone https://github.com/microservices-today/ngp-app-codepipeline.git`  
-   `cd ngp-app-codepipeline`
+   `git clone https://github.com/microservices-today/ecs-cicd.git`
+   `cd ecs-cicd`
 1. Export AWS credentials
    `export AWS_ACCESS_KEY_ID="accesskey"`
    `export AWS_SECRET_ACCESS_KEY="secretkey"`
