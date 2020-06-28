@@ -159,6 +159,10 @@ Parameters:
   SNSTopicARN:
     Type: String
     Description: (Optional) SNS Topic ARN for Slack notification. See prerequisite 6.
+  CICDVersion:
+    Type: String
+    Default: 2.0.1
+    Description: Specify it, if you want to support old version of ecs-api/mq (e.g. 1.0.1)
 
 Mappings:
   EnvironmentTag:
@@ -369,6 +373,8 @@ Resources:
             Value: !Ref S3SwaggerBucketName
           - Name: API_HOSTNAME
             Value: !Ref APIHostname
+          - Name: CICD_VERSION
+            Value: !Ref CICDVersion
       ServiceRole: !Ref CodeBuildServiceRole
   CodeBuildRelease:
     Type: AWS::CodeBuild::Project
