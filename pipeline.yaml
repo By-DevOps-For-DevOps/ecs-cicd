@@ -58,6 +58,7 @@ Metadata:
           default: "Notifications"
         Parameters:
           - Email
+
 Parameters:
   PipelineName:
     Description: A name for pipeline
@@ -376,6 +377,7 @@ Resources:
           - Name: CICD_VERSION
             Value: !Ref CICDVersion
       ServiceRole: !Ref CodeBuildServiceRole
+
   CodeBuildRelease:
     Type: AWS::CodeBuild::Project
     Properties:
@@ -405,6 +407,7 @@ Resources:
           - Name: GITHUB_EMAIL
             Value: !Ref ReleaseManagerGitEmail
       ServiceRole: !Ref CodeBuildServiceRole
+
   Pipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
@@ -490,6 +493,7 @@ Resources:
                   - Name: Release
                 RunOrder: 5
           - !Ref AWS::NoValue
+
   ECR:
     Type: AWS::ECR::Repository
     Properties:
@@ -511,6 +515,7 @@ Resources:
                   - "ecr:BatchGetImage"
                   - "ecr:BatchCheckLayerAvailability"
           - !Ref AWS::NoValue
+
 Outputs:
   PipelineUrl:
     Value: !Sub https://console.aws.amazon.com/codepipeline/home?region=${AWS::Region}#/view/${Pipeline}
