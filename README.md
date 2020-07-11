@@ -25,17 +25,6 @@
 1. Run `bash bin/configure.sh`.
 1. Open the link at the end of the script to continue the installation.
 
-### !Important
-
-In order to pull staging images to production account we need to assign production account permissions to staging ECR:
-
-1. All repositories > repository-name > Permissions tab
-1. Add a new repository policy. Give production account Id to Principal input field.
-1. Select Action as *All actions*
-1. Save the policy.
-
-![Preview](permission.png)
-
 ### CodePipeline Stages
 
 #### Source Stage
