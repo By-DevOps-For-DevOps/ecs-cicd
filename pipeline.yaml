@@ -168,7 +168,7 @@ Parameters:
   CICDVersion:
     Type: String
     Default: 2.0.1
-    Description: Specify it, if you want to support old version of ecs-api/mq (e.g. 1.0.1)
+    Description: Specify it, if you want to support old version of ecs-api/mq (e.g. 1.0.1) or ecs-job (e.g. 1.0.0)
 
 Mappings:
   EnvironmentTag:
