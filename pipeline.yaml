@@ -80,7 +80,7 @@ Parameters:
     Type: String
     Description: Tag name for the cloudformation stack. For simplicity, you can keep it the same as stack name.
   InfrastructureTagName:
-    Default: TAG_NAME
+    Default: INFRA_TAG_NAME
     Type: String
     Description: Tag name specified for infrastructure cloudformation stack, e.g. v304.
   ECSRepositoryName:
@@ -140,7 +140,7 @@ Parameters:
     Type: String
     Description: (Production Only) Region containing the Staging ECS Cluster
   S3BucketName:
-    Default: ngp-v304-app-stage
+    Default: S3_BUCKET_NAME
     Type: String
     Description: S3 Bucket which contains the Lambda function
   S3SwaggerBucketName:

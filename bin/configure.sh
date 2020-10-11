@@ -15,11 +15,13 @@ if [[ -z "$AWS_REGION" ]]; then
 fi
 
 cp pipeline.yaml bin/
-# TODO(KAMOL): It doesn't make sense
+
+# e.g. ngp-v304-app-stage, the reusable S3 bucket for app pipeline
 sed -i -e "s@S3_BUCKET_NAME@${S3_BUCKET_NAME}@g" bin/pipeline.yaml
+# e.g. ngp-v304-app-stage -> v304
 TAG_NAME=$(echo "${S3_BUCKET_NAME}" | cut -d'-' -f2)
-# TODO(KAMOL): It doesn't make sense
-sed -i -e "s@TAG_NAME@${TAG_NAME}@g" bin/pipeline.yaml
+sed -i -e "s@INFRA_TAG_NAME@${TAG_NAME}@g" bin/pipeline.yaml
+
 aws s3 cp bin/pipeline.yaml s3://${S3_BUCKET_NAME}/
 rm bin/pipeline.yaml
 rm -f bin/pipeline.yaml-e
@@ -28,12 +30,6 @@ aws s3 cp notification.yaml s3://${S3_BUCKET_NAME}/
 zip -q lambda_notify.zip lambda_notify.py
 aws s3 cp lambda_notify.zip s3://${S3_BUCKET_NAME}/
 rm lambda_notify.zip
-
-#cd lambda
-#npm install --quiet
-#zip -q -r lambdafunction.zip ./*
-#aws s3 cp lambdafunction.zip s3://${S3_BUCKET_NAME}/
-#rm lambdafunction.zip
 
 URL="https://console.aws.amazon.com/cloudformation/home?region=${AWS_REGION}#/stacks/new?templateURL=https://s3.amazonaws.com/${S3_BUCKET_NAME}/pipeline.yaml"
 echo -e "Open the Link in Browser:\n${GREEN}${URL}${NC}"
