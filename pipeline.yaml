@@ -61,7 +61,7 @@ Metadata:
 
 Parameters:
   PipelineName:
-    Description: A name for pipeline. For simplisity, you can keep it the same as stack name.
+    Description: A name for pipeline. For simplicity, you can keep it the same as stack name.
     Type: String
   GitHubRepo:
     Type: String
@@ -78,7 +78,7 @@ Parameters:
     Description: The Github User/Organization under which the repository is hosted.
   TagName:
     Type: String
-    Description: Tag name for the cloudformation stack. For simplisity, you can keep it the same as stack name.
+    Description: Tag name for the cloudformation stack. For simplicity, you can keep it the same as stack name.
   InfrastructureTagName:
     Default: TAG_NAME
     Type: String

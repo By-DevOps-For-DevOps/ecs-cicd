@@ -5,7 +5,7 @@ GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-echo -e "\nSpecify the ${GREEN}S3 bucket name${NC} for storing the lamda function, the bucket should be in same region of CodePipeline"
+echo -e "\nSpecify the ${GREEN}S3 bucket name${NC} for storing the lambda function, the bucket should be in same region of CodePipeline"
 read -r S3_BUCKET_NAME
 
 echo -e "Enter the ${GREEN}AWS REGION${NC} to deploy the Cloudformation Stack [default: ${BLUE}ap-southeast-1${NC}]"
@@ -15,8 +15,10 @@ if [[ -z "$AWS_REGION" ]]; then
 fi
 
 cp pipeline.yaml bin/
+# TODO(KAMOL): It doesn't make sense
 sed -i -e "s@S3_BUCKET_NAME@${S3_BUCKET_NAME}@g" bin/pipeline.yaml
 TAG_NAME=$(echo "${S3_BUCKET_NAME}" | cut -d'-' -f2)
+# TODO(KAMOL): It doesn't make sense
 sed -i -e "s@TAG_NAME@${TAG_NAME}@g" bin/pipeline.yaml
 aws s3 cp bin/pipeline.yaml s3://${S3_BUCKET_NAME}/
 rm bin/pipeline.yaml
