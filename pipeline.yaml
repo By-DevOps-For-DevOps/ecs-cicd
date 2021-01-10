@@ -58,9 +58,10 @@ Metadata:
           default: "Notifications"
         Parameters:
           - Email
+
 Parameters:
   PipelineName:
-    Description: A name for pipeline
+    Description: A name for pipeline. For simplicity, you can keep it the same as stack name.
     Type: String
   GitHubRepo:
     Type: String
@@ -77,19 +78,25 @@ Parameters:
     Description: The Github User/Organization under which the repository is hosted.
   TagName:
     Type: String
-    Description: Tag name for the cloudformation stack
+    Description: Tag name for the cloudformation stack. For simplicity, you can keep it the same as stack name.
   InfrastructureTagName:
+    Default: INFRA_TAG_NAME
     Type: String
-    Description: Tag name specified for infrastructure cloudformation stack.
+    Description: Tag name specified for infrastructure cloudformation stack, e.g. v304.
   ECSRepositoryName:
     Type: String
-    Description: ECS Repository Name (If URI is xxx.dkr.ecr.us-east-1.amazonaws.com/nginx, then nginx)
+    Description: >
+      If your ECR URI is xxx.dkr.ecr.us-east-1.amazonaws.com/ngp-nodejs, then just type ngp-nodejs.
+      Please note, ECR name should be the same for Staging and Production.
+      Because, in Production environment CodeBuild pulls docker image from Staging ECR and
+      pushes it to Production ECR by ECR name.
   ECSRegion:
     Type: String
     Description: Region containing the ECS Cluster.
+    Default: ap-southeast-1
   HostedZone:
     Type: String
-    Description: Hosted zone for Route53 entry.
+    Description: Hosted zone for Route53 entry with a dot(.) at the end of the domain (e.g. example.com.).
   SourcePath:
     Type: String
     Description: (Optional) EFS source path.
@@ -98,7 +105,7 @@ Parameters:
     Description: (Optional) Docker container volume mount path. For eg. /app/efs
   DesiredCount:
     Type: Number
-    Default: 2
+    Default: 1
     Description: ECS Service desired count.
   ECSCPUCount:
     Type: Number
@@ -116,13 +123,13 @@ Parameters:
     Description: The priority for the routing rule added to the load balancer. This only applies if you have multiple services on single load balancer.
   ReleasePlan:
     Type: String
-    Description: (Staging Only) Release version (Eg. 1.0.0) Plan for this Staging Pipeline (This should be updated after each release)
+    Description: (Staging Only) Release version (Eg. 1.0.0) Plan for this Staging Pipeline (This should be updated for each release, manually :( )
   ReleaseManagerGitUsername:
     Type: String
-    Description: (Staging Only)Github Username of the Release Manager
+    Description: (Staging Only) Github Username of the Release Manager
   ReleaseManagerGitEmail:
     Type: String
-    Description: (Staging Only)Github Email of the Release Manager
+    Description: (Staging Only) Github Email of the Release Manager
   ProductionAWSAccountNumber:
     Type: String
     Description: (Staging Only) Production AWS Account Number
@@ -133,7 +140,7 @@ Parameters:
     Type: String
     Description: (Production Only) Region containing the Staging ECS Cluster
   S3BucketName:
-    Default: ngp-v303-app-stage
+    Default: S3_BUCKET_NAME
     Type: String
     Description: S3 Bucket which contains the Lambda function
   S3SwaggerBucketName:
@@ -141,7 +148,7 @@ Parameters:
     Description: (API App Only) S3 Bucket which contains the Swagger API docs. Leave empty if want to skip the api gateway resource.
   APIHostname:
     Type: String
-    Description: (API App Only) API Gateway Hostname
+    Description: (API App Only) API Gateway Hostname (e.g. api.example.com)
   DeployEnvironment:
     Type: String
     Description: Specify the environment
@@ -158,6 +165,10 @@ Parameters:
   SNSTopicARN:
     Type: String
     Description: (Optional) SNS Topic ARN for Slack notification. See prerequisite 6.
+  CICDVersion:
+    Type: String
+    Default: 2.0.1
+    Description: Specify it, if you want to support old version of ecs-api/mq (e.g. 1.0.1) or ecs-job (e.g. 1.0.0)
 
 Mappings:
   EnvironmentTag:
@@ -207,6 +218,9 @@ Resources:
               - Resource: "*"
                 Effect: Allow
                 Action: "*"
+      Tags:
+        - Key: CloudFormation
+          Value: true
 
   CodeBuildServiceRole:
     Type: AWS::IAM::Role
@@ -258,6 +272,9 @@ Resources:
                 Effect: Allow
                 Action:
                   - s3:PutObject
+      Tags:
+        - Key: CloudFormation
+          Value: true
 
   CodePipelineServiceRole:
     Type: AWS::IAM::Role
@@ -297,10 +314,17 @@ Resources:
                   - iam:PassRole
                   - lambda:*
                   - ec2:CreateSecurityGroup
+      Tags:
+        - Key: CloudFormation
+          Value: true
 
   ArtifactBucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
+    Properties:
+      Tags:
+        - Key: CloudFormation
+          Value: true
 
   CodeBuildProject:
     Type: AWS::CodeBuild::Project
@@ -368,7 +392,13 @@ Resources:
             Value: !Ref S3SwaggerBucketName
           - Name: API_HOSTNAME
             Value: !Ref APIHostname
+          - Name: CICD_VERSION
+            Value: !Ref CICDVersion
       ServiceRole: !Ref CodeBuildServiceRole
+      Tags:
+        - Key: CloudFormation
+          Value: true
+
   CodeBuildRelease:
     Type: AWS::CodeBuild::Project
     Properties:
@@ -398,6 +428,10 @@ Resources:
           - Name: GITHUB_EMAIL
             Value: !Ref ReleaseManagerGitEmail
       ServiceRole: !Ref CodeBuildServiceRole
+      Tags:
+        - Key: CloudFormation
+          Value: true
+
   Pipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
@@ -483,6 +517,10 @@ Resources:
                   - Name: Release
                 RunOrder: 5
           - !Ref AWS::NoValue
+      Tags:
+        - Key: CloudFormation
+          Value: true
+
   ECR:
     Type: AWS::ECR::Repository
     Properties:
@@ -504,7 +542,10 @@ Resources:
                   - "ecr:BatchGetImage"
                   - "ecr:BatchCheckLayerAvailability"
           - !Ref AWS::NoValue
+      Tags:
+        - Key: CloudFormation
+          Value: true
+
 Outputs:
   PipelineUrl:
     Value: !Sub https://console.aws.amazon.com/codepipeline/home?region=${AWS::Region}#/view/${Pipeline}
-
