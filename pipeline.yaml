@@ -37,11 +37,6 @@ Metadata:
         Parameters:
           - HostedZone
       - Label:
-          default: "Docker Volume Mount"
-        Parameters:
-          - SourcePath
-          - ContainerMountPath
-      - Label:
           default: "ECS Production Parameters"
         Parameters:
           - SourceECSAWSAccountId
@@ -82,7 +77,7 @@ Parameters:
   InfrastructureTagName:
     Default: INFRA_TAG_NAME
     Type: String
-    Description: Tag name specified for infrastructure cloudformation stack, e.g. v304.
+    Description: Tag name specified for infrastructure cloudformation stack, e.g. v305.
   ECSRepositoryName:
     Type: String
     Description: >
@@ -97,12 +92,6 @@ Parameters:
   HostedZone:
     Type: String
     Description: Hosted zone for Route53 entry with a dot(.) at the end of the domain (e.g. example.com.).
-  SourcePath:
-    Type: String
-    Description: (Optional) EFS source path.
-  ContainerMountPath:
-    Type: String
-    Description: (Optional) Docker container volume mount path. For eg. /app/efs
   DesiredCount:
     Type: Number
     Default: 1
@@ -167,8 +156,12 @@ Parameters:
     Description: (Optional) SNS Topic ARN for Slack notification. See prerequisite 6.
   CICDVersion:
     Type: String
-    Default: 2.0.1
-    Description: Specify it, if you want to support old version of ecs-api/mq (e.g. 1.0.1) or ecs-job (e.g. 1.0.0)
+    Default: 2.1.1
+    Description: >
+      Specify which type of servie are you going to use:
+      - Sync (API) based https://github.com/microservices-today/ecs-api
+      - Async (Queue) based https://github.com/microservices-today/ecs-mq
+      - Or Cronjob based https://github.com/microservices-today/ecs-job
 
 Mappings:
   EnvironmentTag:
@@ -337,7 +330,7 @@ Resources:
         Type: CODEPIPELINE
       Environment:
         ComputeType: "BUILD_GENERAL1_LARGE"
-        Image: "aws/codebuild/amazonlinux2-x86_64-standard:3.0"
+        Image: "aws/codebuild/amazonlinux2-x86_64-standard:4.0"
         Type: "LINUX_CONTAINER"
         PrivilegedMode: true
         EnvironmentVariables:
@@ -374,10 +367,6 @@ Resources:
             Value: !Ref ECSRegion
           - Name: HOSTED_ZONE
             Value: !Ref HostedZone
-          - Name: EFS_SOURCE_PATH
-            Value: !Ref SourcePath
-          - Name: CONTAINER_MOUNT_PATH
-            Value: !Ref ContainerMountPath
           - Name: DESIRED_COUNT
             Value: !Ref DesiredCount
           - Name: ECS_CPU_COUNT
@@ -409,7 +398,7 @@ Resources:
         Type: CODEPIPELINE
       Environment:
         ComputeType: "BUILD_GENERAL1_LARGE"
-        Image: "aws/codebuild/amazonlinux2-x86_64-standard:3.0"
+        Image: "aws/codebuild/amazonlinux2-x86_64-standard:4.0"
         Type: "LINUX_CONTAINER"
         PrivilegedMode: true
         EnvironmentVariables:
@@ -521,6 +510,9 @@ Resources:
         - Key: CloudFormation
           Value: true
 
+  #-----------------------------------------------------------------------------#
+  # ECR
+  #-----------------------------------------------------------------------------#
   ECR:
     Type: AWS::ECR::Repository
     Properties:

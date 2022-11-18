@@ -16,9 +16,9 @@ fi
 
 cp pipeline.yaml bin/
 
-# e.g. ngp-v304-app-stage, the reusable S3 bucket for app pipeline
+# e.g. ngp-v305-app-stage, the reusable S3 bucket for app pipeline
 sed -i -e "s@S3_BUCKET_NAME@${S3_BUCKET_NAME}@g" bin/pipeline.yaml
-# e.g. ngp-v304-app-stage -> v304
+# e.g. ngp-v305-app-stage -> v305
 TAG_NAME=$(echo "${S3_BUCKET_NAME}" | cut -d'-' -f2)
 sed -i -e "s@INFRA_TAG_NAME@${TAG_NAME}@g" bin/pipeline.yaml
 

@@ -1,0 +1,26 @@
+name: Lint CloudFormation Templates
+
+on: [push]
+
+jobs:
+  cloudformation-linter:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Cloud Formation Linter with Latest Version
+        uses: scottbrenner/cfn-lint-action@v2
+
+      - name: Print the Cloud Formation Linter Version & run Linter.
+        run: |
+          shopt -s globstar # enable globbing for linting multiple files
+          cfn-lint --version
+          cfn-lint -t ./**/*.yaml
+
+      - name: Print cfn_nag_scan linter
+        uses: stelligent/cfn_nag@master
+        with:
+          input_path: .                          # linter all files recursively
+          extra_args: '--template-pattern yaml'  # linter only yaml files

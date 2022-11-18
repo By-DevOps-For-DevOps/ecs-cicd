@@ -4,7 +4,7 @@
 
 ### Create a reusable S3 buckets in the same region as your CodePipeline:
 
-1. For your apps template (e.g. `ngp-v304-app-stage`) and store the Lambda function for slack notifications.
+1. For your apps template (e.g. `ngp-v305-app-stage`) and store the Lambda function for slack notifications.
 
 ### Other steps
 
@@ -56,9 +56,9 @@ application Service in ECS.
 ### App specific environment variables
 
 ```bash
-aws ssm put-parameter --name /v301-Dev/XXX --value "XXX" --type SecureString
-aws ssm put-parameter --name /v304-Dev/YYY --value "YYY" --type SecureString
-aws ssm put-parameter --name /v304-Dev/ZZZ --value "ZZZ" --type SecureString
+aws ssm put-parameter --name /v305-Dev/XXX --value "XXX" --type SecureString
+aws ssm put-parameter --name /v305-Dev/YYY --value "YYY" --type SecureString
+aws ssm put-parameter --name /v305-Dev/ZZZ --value "ZZZ" --type SecureString
 ```
 
 Place your parameters keys (only keys, not actual secrets) in `.env.sample`

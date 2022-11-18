@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Example:
-# bash cp-params.sh ../ngp-nodejs/.env.sample v303-Staging v304-Staging
+# bash cp-params.sh ../ngp-nodejs/.env.sample v303-Staging v305-Staging
 #
 
 set -ex
