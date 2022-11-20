@@ -10,8 +10,6 @@
 
 1. Your app repository must contain [buildspec.yaml](https://github.com/microservices-today/ngp-nodejs/blob/master/buildspec.yml) and [ecs.sh](https://github.com/microservices-today/ngp-nodejs/blob/master/ecs.sh) files (please refer to [ngp-nodejs](https://github.com/microservices-today/ngp-nodejs) app).
 1. You should generate [GitHub Token](https://help.github.com/en/github/authenticating-to-github/creating-a-personal-access-token-for-the-command-line) with `admin:repo_hook` and `repo` scopes to enable github changes to trigger this pipeline.
-1. (Optional) Notifications can be enabled by running [ngp-notification](https://github.com/microservices-today/ngp-notification.git)
- first and providing the SNS Topic ARN from the CloudFormation output as `SNSTopicARN` parameter value.
 
 ### Steps to install
 

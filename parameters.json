@@ -60,10 +60,6 @@
     "ParameterValue": "lambda"
   },
   {
-    "ParameterKey": "SNSTopicARN",
-    "ParameterValue": ""
-  },
-  {
     "ParameterKey": "ReleaseManagerGitEmail",
     "ParameterValue": ""
   },
@@ -77,6 +73,6 @@
   },
   {
     "ParameterKey": "ProductionAWSAccountNumber",
-    "ParameterValue": "71234567890"
+    "ParameterValue": ""
   }
 ]
