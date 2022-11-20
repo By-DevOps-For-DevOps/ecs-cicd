@@ -70,7 +70,7 @@ YYY=
 
 ### Architecture
 
-![--Preview](CICDPipeline.png)
+![--Preview](docs/CICDPipeline.png)
 
 ### Cross Account Deployment with Automated Release
 
@@ -78,8 +78,8 @@ The `ecs-cicd` can be configured to run staging and production pipeline in diffe
 Using this workflow, release can be triggered from the Staging pipeline and Production
 pipeline with pull the ECR image from Staging AWS Account.
 
-![Preview](cross-account-deployment.png)
+![Preview](docs/cross-account-deployment.png)
 
 ### Environments are based on git workflow
 
-![--Preview](git-workflow.png)
+![--Preview](docs/git-workflow.png)
